@@ -11,17 +11,23 @@
         <a-assets>
           <img id="texture" src="texture.png">
         </a-assets>
-
         <a-box color="#FFF" width="4" height="10" depth="2"
                position="-10 2 -5" rotation="0 0 45" scale="2 0.5 3"
                src="#texture">
           <!-- Animation will only play when the box is clicked. -->
           <a-animation attribute="rotation" begin="click" repeat="indefinite" to="0 360 0"></a-animation>
         </a-box>
-
-        <a-camera position="0 1.8 0">
-          <a-cursor color="#2E3A87">
-        </a-camera>
       </a-scene>
   </body>
+
+  <script> 
+      var box = document.querySelector('a-box');
+      box.addEventListener('mouseenter', function () {
+        box.setAttribute('scale', {
+          x: 4,
+          y: 1,
+          z: 6
+        });
+      });
+  </script> 
 </html>
