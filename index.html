@@ -1,11 +1,13 @@
 <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  
  <script> 
-    var AMOUNTX= 25 , AMOUNTY = 25,  SEPARATION = 50, count = 0;
-    var YDISPLACE = -200; 
+    var AMOUNTX= 25 , AMOUNTY = 25,  SEPARATION = 100, count = 0;
+    var YDISPLACE = -50; 
     //build a mesh object that contains all the spheres
     AFRAME.registerComponent('blanket', {
         init: function(){
+            //create a light mixin
+            //can you add a mixin to a sphere? 
             this.circles = [];
             for( var ix = 0; ix < AMOUNTX; ix++ ){
               for( var iy = 0; iy < AMOUNTY; iy++ ){
@@ -15,8 +17,9 @@
                  position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
                  position.y = YDISPLACE;
                  entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "1");
+                 entity.setAttribute("radius", "2");
                  entity.setAttribute("color", "white");
+
                  this.el.sceneEl.appendChild(entity);
                  this.circles.push(entity);
               }
@@ -31,7 +34,7 @@
               for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
                    var particle = this.circles[i];
                    var pos = particle.getAttribute("position");
-                   var y = (Math.sin((ix + count ) * 0.5 ) * 50) + (Math.sin( (iy + count) * 0.5) * 5) + YDISPLACE;
+                   var y = (Math.sin((ix + count ) * 0.3 ) * 50) + (Math.sin( (iy + count) * 0.5) * 5) + YDISPLACE;
                    var newPos = new THREE.Vector3();
                    newPos.x = pos.x, newPos.y = y, newPos.z = pos.z; 
                    this.circles[i].setAttribute("position", newPos);
@@ -47,6 +50,8 @@
 
  <a-scene>
      <a-sky color="black"> </a-sky> 
+     <!-- ~~ lights --> 
+     <a-light type="point" color="#EEEEEE" position="0 5 0"></a-light>
      <a-entity blanket> </a-entity> 
      <a-camera position="0 0 0"> </a-camera> 
  </a-scene> 
