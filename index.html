@@ -1,28 +1,45 @@
 <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  
  <script> 
-    var AMOUNTX= 40 , AMOUNTY = 40 , SEPARATION = 40;
-  
+    var AMOUNTX= 20 , AMOUNTY = 20,  SEPARATION = 10, count = 0;
+    var YDISPLACE = -200; 
     //build a mesh object that contains all the spheres
     AFRAME.registerComponent('blanket', {
         init: function(){
-
             this.circles = [];
-            var i = 0;
             for( var ix = 0; ix < AMOUNTX; ix++ ){
               for( var iy = 0; iy < AMOUNTY; iy++ ){
                  var entity = document.createElement('a-sphere');
                  var position = new THREE.Vector3();
                  position.x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
                  position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
-                 position.y = -200;
+                 position.y = YDISPLACE;
                  entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "2");
+                 entity.setAttribute("radius", "1");
                  entity.setAttribute("color", "white");
                  this.el.sceneEl.appendChild(entity);
-                // this.circles.push(entity);
+                 this.circles.push(entity);
               }
             }
+        }, 
+
+        tick: function(){
+            var i = 0;
+            //console.log(c.getAttribute('position'));
+        
+            for ( var ix = 0; ix < AMOUNTX; ix ++ ) {
+              for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
+                   var particle = this.circles[i];
+                   var pos = particle.getAttribute("position");
+                   var y = (Math.sin((ix + count ) * 0.3 ) * 50) + (Math.sin( (iy + count) * 0.5) * 5) + YDISPLACE;
+                   var newPos = new THREE.Vector3();
+                   newPos.x = pos.x, newPos.y = y, newPos.z = pos.z; 
+                   this.circles[i].setAttribute("position", newPos);
+                   i++; 
+              }
+            } 
+
+            count += 0.1;
         }
     }); 
 
