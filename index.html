@@ -1,8 +1,8 @@
 <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  
  <script> 
-    var AMOUNTX= 25 , AMOUNTY = 25,  SEPARATION = 100, count = 0;
-    var YDISPLACE = -50; 
+    var AMOUNTX= 25 , AMOUNTY = 25,  SEPARATION = 80, count = 0;
+    var YDISPLACE = -300; 
     //build a mesh object that contains all the spheres
     AFRAME.registerComponent('blanket', {
         init: function(){
@@ -34,7 +34,7 @@
               for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
                    var particle = this.circles[i];
                    var pos = particle.getAttribute("position");
-                   var y = (Math.sin((ix + count ) * 0.3 ) * 50) + (Math.sin( (iy + count) * 0.5) * 5) + YDISPLACE;
+                   var y = (Math.sin((ix + count ) * 0.5 ) * 50) + (Math.sin( (iy + count) * 0.5) * 5) + YDISPLACE;
                    var newPos = new THREE.Vector3();
                    newPos.x = pos.x, newPos.y = y, newPos.z = pos.z; 
                    this.circles[i].setAttribute("position", newPos);
