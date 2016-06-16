@@ -2,13 +2,13 @@
  
  <script> 
     var AMOUNTX= 25, AMOUNTY = 25,  SEPARATION = 100, count = 0;
-    var YDISPLACE = -300; 
-    var MAX = -150, MIN = -250; 
+    var YDISPLACE = -200; 
+
+
+    var MAX = 920, MIN = -1000 
     //build a mesh object that contains all the spheres
     AFRAME.registerComponent('blanket', {
         init: function(){
-            //create a light mixin
-            //can you add a mixin to a sphere? 
             this.circles = [];
             for( var ix = 0; ix < AMOUNTX; ix++ ){
               for( var iy = 0; iy < AMOUNTY; iy++ ){
@@ -17,9 +17,13 @@
                  position.x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
                  position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
                  position.y = YDISPLACE;
+
+                 var colorx = parseInt(map_range(position.x , MIN, MAX, 50 , 255));
+                 var colorz = parseInt(map_range(position.y, MIN, MAX, 50, 255));
                  entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "2");
-                 entity.setAttribute("color", "white");
+                 entity.setAttribute("radius", "2.5");
+                 var color = "rgb(" + colorx + "," + colorz + ", 140)";
+                 entity.setAttribute("color", color);
 
                  this.el.sceneEl.appendChild(entity);
                  this.circles.push(entity);
@@ -34,7 +38,7 @@
               for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
                    var particle = this.circles[i];
                    var pos = particle.getAttribute("position");
-                   var y = (Math.sin((ix + count ) * 0.5 ) * 50) + (Math.sin( (iy + count) * 0) * 5) + YDISPLACE;
+                   var y = (Math.sin((ix + count ) * 0.6 ) * 50) + (Math.sin( (iy + count) * 0) * 5) + YDISPLACE;
                    var newPos = new THREE.Vector3();
                    newPos.x = pos.x, newPos.y = y, newPos.z = pos.z; 
                    this.circles[i].setAttribute("position", newPos);
