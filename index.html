@@ -3,13 +3,10 @@
  <script> 
     var AMOUNTX= 25, AMOUNTY = 25,  SEPARATION = 100, count = 0;
     var YDISPLACE = -200; 
-
     var angle = 0.0;
     var angleVel = 0.003;
     var startAngle = 0;
-
     noise.seed(Math.random());
-
     var MAX = 920, MIN = -1000 
     //build a mesh object that contains all the spheres
     AFRAME.registerComponent('blanket', {
@@ -27,13 +24,12 @@
                  entity.setAttribute("position", position);
                  entity.setAttribute("radius", "3.5");
                  var color = "rgb(" + colorx + "," + colorz + ", 140)";
-                 entity.setAttribute("color", "white");
+                 entity.setAttribute("color", color);
                  this.el.sceneEl.appendChild(entity);
                  this.circles.push(entity);
               }
             }
         }, 
-
         tick: function(){
             startAngle+=0.02;
             angle = startAngle;
@@ -44,8 +40,8 @@
                    var particle = this.circles[i];
                    var pos = particle.getAttribute("position");
                    //var y = (Math.cos( ix + count ) * 0.2  * 50) + (Math.sin((count + iy) * 0.1) * 3) + YDISPLACE;
-                   var y = noise.perlin2(angle,angle);
-                   var final_y = map_range(y, -1 , 1, -200, -100)
+                   var y = noise.perlin2(angle + count ,angle);
+                   var final_y = map_range(y, -1 , 1, -300, -100)
                    var newPos = new THREE.Vector3();
                    newPos.x = pos.x, newPos.y = final_y, newPos.z = pos.z; 
                    this.circles[i].setAttribute("position", newPos);
@@ -53,10 +49,9 @@
                    angle+=angleVel;
               }
             } 
-            count += 0.1;
+            count += 0.01;
         }
     }); 
-
     function map_range(value, low1, high1, low2, high2) {
         return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
     }
