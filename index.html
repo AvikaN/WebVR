@@ -19,12 +19,15 @@
                  position.x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
                  position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
                  position.y = YDISPLACE;
+
+                 //color 
                  var colorx = parseInt(map_range(position.x , MIN, MAX, 0 , 255));
                  var colorz = parseInt(map_range(position.y, MIN, MAX, 0, 255));
                  entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "3.5");
+                 entity.setAttribute("radius", "1.8");
                  var color = "rgb(" + colorx + "," + colorz + ", 140)";
                  entity.setAttribute("color", color);
+
                  this.el.sceneEl.appendChild(entity);
                  this.circles.push(entity);
               }
