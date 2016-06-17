@@ -1,9 +1,14 @@
-<script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
- 
+ <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
+ <script src="perlin.js"></script> 
  <script> 
     var AMOUNTX= 25, AMOUNTY = 25,  SEPARATION = 100, count = 0;
     var YDISPLACE = -200; 
 
+    var angle = 0.0;
+    var angleVel = 0.05;
+    var startAngle = 0;
+
+    noise.seed(Math.random());
 
     var MAX = 920, MIN = -1000 
     //build a mesh object that contains all the spheres
@@ -17,14 +22,12 @@
                  position.x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
                  position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
                  position.y = YDISPLACE;
-
-                 var colorx = parseInt(map_range(position.x , MIN, MAX, 50 , 255));
-                 var colorz = parseInt(map_range(position.y, MIN, MAX, 50, 255));
+                 var colorx = parseInt(map_range(position.x , MIN, MAX, 0 , 255));
+                 var colorz = parseInt(map_range(position.y, MIN, MAX, 0, 255));
                  entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "2.5");
+                 entity.setAttribute("radius", "3.5");
                  var color = "rgb(" + colorx + "," + colorz + ", 140)";
-                 entity.setAttribute("color", color);
-
+                 entity.setAttribute("color", "white");
                  this.el.sceneEl.appendChild(entity);
                  this.circles.push(entity);
               }
@@ -38,14 +41,15 @@
               for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
                    var particle = this.circles[i];
                    var pos = particle.getAttribute("position");
-                   var y = (Math.sin((ix + count ) * 0.6 ) * 50) + (Math.sin( (iy + count) * 0) * 5) + YDISPLACE;
+                   //var y = (Math.cos( ix + count ) * 0.2  * 50) + (Math.sin((count + iy) * 0.1) * 3) + YDISPLACE;
+                   y = 
                    var newPos = new THREE.Vector3();
                    newPos.x = pos.x, newPos.y = y, newPos.z = pos.z; 
                    this.circles[i].setAttribute("position", newPos);
                    i++; 
               }
             } 
-            count += 0.10;
+            count += 0.1;
         }
     }); 
 
@@ -57,7 +61,7 @@
  <a-scene>
      <a-sky color="black"> </a-sky> 
      <!-- ~~ lights --> 
-     <a-light type="point" color="white" position="0 5 0"></a-light>
+     <a-light type="point" color="white" position="-5 0 0"></a-light>
      <a-entity blanket> </a-entity> 
      <a-camera position="0 0 0"> </a-camera> 
  </a-scene> 
