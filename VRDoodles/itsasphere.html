@@ -1,0 +1,96 @@
+ <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
+ <script src="perlin.js"></script> 
+
+ <script>
+
+    //tick moves too fast 
+    var radius = 500; 
+    var noiseScale = 0.001;
+    var maxVel = Math.PI / 80;
+    noise.seed(Math.random());
+
+    var offset1 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
+    var offset2 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
+
+    AFRAME.registerComponent('particle', {
+
+      init: function(){
+          this.three_vectors = [];
+          this.a = Math.random() * (Math.PI * 2);
+          this.b = Math.random() * (Math.PI * 2);
+          this.three_vectors.push(this.getCoordinates());
+          console.log(this.three_vectors);
+      },
+
+      updatePosition: function(){
+          var v3_list = this.three_vectors;
+          if(this.three_vectors.length < 80){
+              //console.log(this.three_vectors.length);
+              var v3 = this.three_vectors[v3_list.length - 1];
+              var noise1 = noise.perlin3(offset1.x + v3.x * noiseScale, offset1.y + v3.y * noiseScale, offset1.z + v3.z * noiseScale); 
+              var noise2 = noise.perlin3(offset2.x + v3.x * noiseScale, offset2.y + v3.y * noiseScale, offset2.z + v3.z * noiseScale); 
+              this.a += map_range(noise1, 0, 1, -maxVel, maxVel);
+              this.b += map_range(noise2, 0, 1, -maxVel, maxVel);
+              this.three_vectors.push(this.getCoordinates());
+          }
+      },
+
+      draw: function(){
+           var material = new THREE.LineBasicMaterial({
+                color: "#FFF"
+           });
+           var geometry = new THREE.Geometry();
+           this.three_vectors.forEach(function(vec3) {
+                geometry.vertices.push( new THREE.Vector3(vec3.x, vec3.y, vec3.z));
+           });
+           this.el.setObject3D('mesh', new THREE.Line(geometry, material));
+      },
+
+      getCoordinates: function(){
+         var x = radius * Math.sin(this.a) * Math.cos(this.b);
+         var y = radius * Math.sin(this.a) * Math.sin(this.b);
+         var z = radius * Math.cos(this.a);
+         return new THREE.Vector3(x, y, z);
+      }
+
+    })
+
+    AFRAME.registerComponent('sphereOfAwesomeness', {
+
+      init: function(){
+        //store particle entities
+        this.particles = [];
+      },
+
+      //add a new particle on each tick? 
+      tick: function(){
+        //update and draw? 
+        this.particles.forEach(function(p){
+            p.components.particle.updatePosition();
+            p.components.particle.draw();
+        });  
+
+        //if(this.particles.length < 30){
+            var newp = document.createElement("a-entity");
+            newp.setAttribute("particle");
+            this.el.sceneEl.appendChild(newp); 
+            this.particles.push(newp);
+        //}
+      }
+
+    });
+
+    function map_range(value, low1, high1, low2, high2) {
+      return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+    }
+
+ </script> 
+
+    <a-scene>
+        <a-sky color="#B2DFEE"> </a-sky> 
+        <a-entity sphereOfAwesomeness></a-entity> 
+        <a-entity position="0 0 0">
+            <a-camera></a-camera>
+        </a-entity>
+    </a-scene>
+
