@@ -36,13 +36,14 @@
       },
 
       draw: function(){
-           var material = new THREE.LineBasicMaterial({
+          var material = new THREE.LineBasicMaterial({
                 color: "#FFF"
            });
            var geometry = new THREE.Geometry();
            this.three_vectors.forEach(function(vec3) {
                 geometry.vertices.push( new THREE.Vector3(vec3.x, vec3.y, vec3.z));
            });
+           this.remove();
            this.el.setObject3D('mesh', new THREE.Line(geometry, material));
       },
 
@@ -51,6 +52,10 @@
          var y = radius * Math.sin(this.a) * Math.sin(this.b);
          var z = radius * Math.cos(this.a);
          return new THREE.Vector3(x, y, z);
+      },
+
+      remove: function () {
+        this.el.removeObject3D('mesh');
       }
 
     })
@@ -70,12 +75,12 @@
             p.components.particle.draw();
         });  
 
-        //if(this.particles.length < 30){
+        if(this.particles.length < 30){
             var newp = document.createElement("a-entity");
             newp.setAttribute("particle");
             this.el.sceneEl.appendChild(newp); 
             this.particles.push(newp);
-        //}
+        }
       }
 
     });
