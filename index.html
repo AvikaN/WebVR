@@ -69,12 +69,12 @@
             p.components.particle.draw();
         });  
 
-        //if(this.particles.length < 30){
+        if(this.particles.length < 50){
             var newp = document.createElement("a-entity");
             newp.setAttribute("particle");
             this.el.sceneEl.appendChild(newp); 
             this.particles.push(newp);
-        //}
+        }
       }
 
     });
