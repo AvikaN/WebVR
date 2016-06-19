@@ -5,7 +5,7 @@
 
     //tick moves too fast 
     var radius = 500; 
-    var noiseScale = 0.001;
+    var noiseScale = 0.0009;
     var maxVel = Math.PI / 80;
     noise.seed(Math.random());
 
@@ -36,7 +36,7 @@
 
       draw: function(){
            var material = new THREE.LineBasicMaterial({
-                color: "#FFF"
+                color: "#AAA"
            });
            var geometry = new THREE.Geometry();
            this.three_vectors.forEach(function(vec3) {
@@ -69,7 +69,7 @@
             p.components.particle.draw();
         });  
 
-        if(this.particles.length < 50){
+        if(this.particles.length < 10){
             var newp = document.createElement("a-entity");
             newp.setAttribute("particle");
             this.el.sceneEl.appendChild(newp); 
@@ -86,7 +86,7 @@
  </script> 
 
     <a-scene>
-        <a-sky color="#B2DFEE"> </a-sky> 
+        <a-sky color="#000000"> </a-sky> 
         <a-entity sphereOfAwesomeness></a-entity> 
         <a-entity position="0 0 0">
             <a-camera></a-camera>
