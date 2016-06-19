@@ -1,69 +1,101 @@
  <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  <script src="perlin.js"></script> 
- <script> 
-    var AMOUNTX= 25, AMOUNTY = 25,  SEPARATION = 100, count = 0;
-    var YDISPLACE = -200; 
-    var angle = 0.0;
-    var angleVel = 0.003;
-    var startAngle = 0;
+
+ <script>
+
+    //tick moves too fast 
+    var radius = 500; 
+    var noiseScale = 0.001;
+    var maxVel = Math.PI / 80;
     noise.seed(Math.random());
-    var MAX = 920, MIN = -1000 
-    //build a mesh object that contains all the spheres
-    AFRAME.registerComponent('blanket', {
-        init: function(){
-            this.circles = [];
-            for( var ix = 0; ix < AMOUNTX; ix++ ){
-              for( var iy = 0; iy < AMOUNTY; iy++ ){
-                 var entity = document.createElement('a-sphere');
-                 var position = new THREE.Vector3();
-                 position.x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
-                 position.z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
-                 position.y = YDISPLACE;
 
-                 //color 
-                 var colorx = parseInt(map_range(position.x , MIN, MAX, 0 , 255));
-                 var colorz = parseInt(map_range(position.y, MIN, MAX, 0, 255));
-                 entity.setAttribute("position", position);
-                 entity.setAttribute("radius", "1.8");
-                 var color = "rgb(" + colorx + "," + colorz + ", 140)";
-                 entity.setAttribute("color", color);
+    var offset1 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
+    var offset2 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
 
-                 this.el.sceneEl.appendChild(entity);
-                 this.circles.push(entity);
-              }
-            }
-        }, 
-        tick: function(){
-            startAngle+=0.02;
-            angle = startAngle;
-            var i = 0;
-            //console.log(c.getAttribute('position'));
-            for ( var ix = 0; ix < AMOUNTX; ix ++ ) {
-              for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
-                   var particle = this.circles[i];
-                   var pos = particle.getAttribute("position");
-                   //var y = (Math.cos( ix + count ) * 0.2  * 50) + (Math.sin((count + iy) * 0.1) * 3) + YDISPLACE;
-                   var y = noise.perlin2(angle + count ,angle);
-                   var final_y = map_range(y, -1 , 1, -300, -100)
-                   var newPos = new THREE.Vector3();
-                   newPos.x = pos.x, newPos.y = final_y, newPos.z = pos.z; 
-                   this.circles[i].setAttribute("position", newPos);
-                   i++; 
-                   angle+=angleVel;
-              }
-            } 
-            count += 0.01;
+    AFRAME.registerComponent('particle', {
+
+      init: function(){
+          this.three_vectors = [];
+          this.a = Math.random() * (Math.PI * 2);
+          this.b = Math.random() * (Math.PI * 2);
+          this.three_vectors.push(this.getCoordinates());
+          console.log(this.three_vectors);
+      },
+
+      updatePosition: function(){
+          var v3_list = this.three_vectors;
+          if(this.three_vectors.length < 80){
+              //console.log(this.three_vectors.length);
+              var v3 = this.three_vectors[v3_list.length - 1];
+              var noise1 = noise.perlin3(offset1.x + v3.x * noiseScale, offset1.y + v3.y * noiseScale, offset1.z + v3.z * noiseScale); 
+              var noise2 = noise.perlin3(offset2.x + v3.x * noiseScale, offset2.y + v3.y * noiseScale, offset2.z + v3.z * noiseScale); 
+              this.a += map_range(noise1, 0, 1, -maxVel, maxVel);
+              this.b += map_range(noise2, 0, 1, -maxVel, maxVel);
+              this.three_vectors.push(this.getCoordinates());
+          }
+      },
+
+      draw: function(){
+          var material = new THREE.LineBasicMaterial({
+                color: "#FFF"
+           });
+           var geometry = new THREE.Geometry();
+           this.three_vectors.forEach(function(vec3) {
+                geometry.vertices.push( new THREE.Vector3(vec3.x, vec3.y, vec3.z));
+           });
+           this.remove();
+           this.el.setObject3D('mesh', new THREE.Line(geometry, material));
+      },
+
+      getCoordinates: function(){
+         var x = radius * Math.sin(this.a) * Math.cos(this.b);
+         var y = radius * Math.sin(this.a) * Math.sin(this.b);
+         var z = radius * Math.cos(this.a);
+         return new THREE.Vector3(x, y, z);
+      },
+
+      remove: function () {
+        this.el.removeObject3D('mesh');
+      }
+
+    })
+
+    AFRAME.registerComponent('sphereOfAwesomeness', {
+
+      init: function(){
+        //store particle entities
+        this.particles = [];
+      },
+
+      //add a new particle on each tick? 
+      tick: function(){
+        //update and draw? 
+        this.particles.forEach(function(p){
+            p.components.particle.updatePosition();
+            p.components.particle.draw();
+        });  
+
+        if(this.particles.length < 30){
+            var newp = document.createElement("a-entity");
+            newp.setAttribute("particle");
+            this.el.sceneEl.appendChild(newp); 
+            this.particles.push(newp);
         }
-    }); 
+      }
+
+    });
+
     function map_range(value, low1, high1, low2, high2) {
-        return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+      return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
     }
+
  </script> 
 
- <a-scene>
-     <a-sky color="black"> </a-sky> 
-     <!-- ~~ lights --> 
-     <a-light type="point" color="white" position="-5 0 0"></a-light>
-     <a-entity blanket> </a-entity> 
-     <a-camera position="0 0 0"> </a-camera> 
- </a-scene> 
+    <a-scene>
+        <a-sky color="#B2DFEE"> </a-sky> 
+        <a-entity sphereOfAwesomeness></a-entity> 
+        <a-entity position="0 0 0">
+            <a-camera></a-camera>
+        </a-entity>
+    </a-scene>
+
