@@ -69,17 +69,19 @@
       //add a new particle on each tick? 
       tick: function(){
         //update and draw? 
-        this.particles.forEach(function(p){
-            p.components.particle.updatePosition();
-            p.components.particle.draw();
-        });  
+        if(this.particles.length < 100){
+          this.particles.forEach(function(p){
+              p.components.particle.updatePosition();
+              p.components.particle.draw();
+          });  
 
-        if(this.particles.length < 30){
-            var newp = document.createElement("a-entity");
-            newp.setAttribute("particle");
-            this.el.sceneEl.appendChild(newp); 
-            this.particles.push(newp);
-        }
+            if(this.particles.length < 30){
+              var newp = document.createElement("a-entity");
+              newp.setAttribute("particle");
+              this.el.sceneEl.appendChild(newp); 
+              this.particles.push(newp);
+            }
+          }
       }
 
     });
@@ -94,7 +96,7 @@
         <a-sky color="#AAAAAA"> </a-sky> 
         <a-entity sphereOfAwesomeness></a-entity>
 
-        <a-entity position="0 0 -200">
+        <a-entity position="0 0 0">
             <a-camera></a-camera>
         </a-entity>
     </a-scene>
