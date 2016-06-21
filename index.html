@@ -22,7 +22,7 @@
 
       updatePosition: function(){
           var v3_list = this.three_vectors;
-          if(this.three_vectors.length < 70){
+          if(this.three_vectors.length < 100){
               var v3 = this.three_vectors[v3_list.length - 1];
               var noise1 = noise.perlin3(offset1.x + v3.x * noiseScale, offset1.y + v3.y * noiseScale, offset1.z + v3.z * noiseScale); 
               var noise2 = noise.perlin3(offset2.x + v3.x * noiseScale, offset2.y + v3.y * noiseScale, offset2.z + v3.z * noiseScale); 
