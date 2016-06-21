@@ -64,13 +64,13 @@
       init: function(){
         //store particle entities
         this.particles = [];
-      }
+      }, 
 
-      /* 
+      
       //add a new particle on each tick? 
       tick: function(){
         //update and draw? 
-        if(this.particles.length < 100){
+        if(this.particles.length < 80){
           this.particles.forEach(function(p){
               p.components.particle.updatePosition();
               p.components.particle.draw();
@@ -83,7 +83,7 @@
               this.particles.push(newp);
             }
           }
-      } */
+      } 
 
     });
 
@@ -94,7 +94,7 @@
  </script>  
 
     <a-scene>
-        <a-sky color="#000"> </a-sky> 
+        <a-sky color="#AAA"> </a-sky> 
         <a-entity sphereOfAwesomeness></a-entity>
 
         <a-entity position="0 0 0">
