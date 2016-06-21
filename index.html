@@ -18,7 +18,6 @@
           this.a = Math.random() * (Math.PI * 2);
           this.b = Math.random() * (Math.PI * 2);
           this.three_vectors.push(this.getCoordinates());
-          console.log(this.three_vectors);
       },
 
       updatePosition: function(){
@@ -67,10 +66,9 @@
       }, 
 
       
+      /* 
       //add a new particle on each tick? 
       tick: function(){
-        //update and draw? 
-        if(this.particles.length < 80){
           this.particles.forEach(function(p){
               p.components.particle.updatePosition();
               p.components.particle.draw();
@@ -81,9 +79,8 @@
               newp.setAttribute("particle");
               this.el.sceneEl.appendChild(newp); 
               this.particles.push(newp);
-            }
-          }
-      } 
+          
+      }  */
 
     });
 
