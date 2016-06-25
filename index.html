@@ -2,7 +2,7 @@
  <script src="perlin.js"></script> 
  <script> 
     //FLOCKING! 
-    var AMOUNTX= 60 , AMOUNTY = 60,  SEPARATION = 100, count = 0;
+    var AMOUNTX= 60 , AMOUNTY = 60,  SEPARATION = 90, count = 0;
     var YDISPLACE = -300; 
     var angle = 0.0;
     var angleVel = 0.0015;
@@ -25,7 +25,7 @@
             z : {default: 0}
         }, 
         init: function() {
-              var geometry = new THREE.SphereGeometry(4, 5, 5);
+              var geometry = new THREE.SphereGeometry(6, 5, 5);
               var ballcolor = "rgb(" + this.data.colorx + "," + this.data.colorx + ", 140)";
               var material = new THREE.MeshBasicMaterial({color: ballcolor});
               this.sphere = new THREE.Mesh(geometry, material);
@@ -74,7 +74,7 @@
                    time += timestep
                    //perlin!
                    var y = noise.perlin3(ix * noiseScale + time , iy * noiseScale - time, time);
-                   var final_y = map_range(y, -1 , 1, -500, -200);
+                   var final_y = map_range(y, -1 , 1, -700, -200);
                    circle.updatePos(final_y);
                    i++;
               }
