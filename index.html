@@ -1,108 +1,96 @@
  <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  <script src="perlin.js"></script> 
-
- <script>
-    //tick moves too fast 
-    var radius = 500; 
-    var noiseScale = 0.001;
-    var maxVel = Math.PI / 100;
+ <script> 
+    //FLOCKING! 
+    var AMOUNTX= 50 , AMOUNTY = 50,  SEPARATION = 80, count = 0;
+    var YDISPLACE = -300; 
+    var angle = 0.0;
+    var angleVel = 0.0015;
+    var startAngle = 0;
     noise.seed(Math.random());
-    var MAX_POINTS = 100; 
+    var MAX = 3000, MIN = -4000 
+    var PI2 = Math.PI * 2;
+    var noiseScale = 0.06;
+    var timestep = 0.000003; 
+    var time = 0; 
 
-    var offset1 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
-    var offset2 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
+    var coordinates = AFRAME.utils.coordinates;
 
     AFRAME.registerComponent('particle', {
+        schema: {
+            colorx : { default: '#FFF'} , 
+            colorz : { default: '#FFF'} , 
+            x : {default: 0},
+            y : {default: 0}, 
+            z : {default: 0}
+        }, 
+        init: function() {
+              var geometry = new THREE.SphereGeometry(3, 5, 5);
+              var ballcolor = "rgb(" + this.data.colorx + "," + this.data.colorz + ", 140)";
+              var material = new THREE.MeshBasicMaterial({color: ballcolor});
+              this.sphere = new THREE.Mesh(geometry, material);
+              this.el.setObject3D('mesh', this.sphere);
 
-      init: function(){
-          this.three_vectors = [];
-          this.a = Math.random() * (Math.PI * 2);
-          this.b = Math.random() * (Math.PI * 2);
-          this.drawCount = 0; 
+              this.sphere.position.x = this.data.x;
+              this.sphere.position.z = this.data.z;
+              this.sphere.position.y = YDISPLACE;
+        },
 
-          var geometry = new THREE.BufferGeometry();
-          var positions = new Float32Array(MAX_POINTS * 3); 
-          geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-          var material = new THREE.LineBasicMaterial({color: 0xFFFFFF, linewidth: 1});
-          this.line = new THREE.Line(geometry, material); 
-
-          //add line to element
-          this.el.setObject3D('mesh', new THREE.Line(geometry, material));
-
-          var storePos = []
-          storePos.push(this.getCoordinates());
-          //set the postions from the start, this makes the rendering much more efficient  
-          for (var i = 0; i < MAX_POINTS; i++) {
-              var v3 = storePos[storePos.length - 1];
-              var noise1 = noise.perlin3(offset1.x + v3.x * noiseScale, offset1.y + v3.y * noiseScale, offset1.z + v3.z * noiseScale); 
-              var noise2 = noise.perlin3(offset2.x + v3.x * noiseScale, offset2.y + v3.y * noiseScale, offset2.z + v3.z * noiseScale);
-              this.a += map_range(noise1, 0, 1, -maxVel, maxVel);
-              this.b += map_range(noise2, 0, 1, -maxVel, maxVel);
-              storePos.push(this.getCoordinates()); 
-          }
-          var pos = this.line.geometry.attributes.position.array;
-          var index = 0;
-
-          for ( var i = 0; i < MAX_POINTS; i++) {
-              positions[ index ++ ] = storePos[i].x;
-              positions[ index ++ ] = storePos[i].y;
-              positions[ index ++ ] = storePos[i].z;
-          }
-      },
-
-      tick: function(){
-          if(this.drawCount < MAX_POINTS){
-            this.drawCount++;
-            this.line.geometry.setDrawRange(0, this.drawCount);
-          }
-      },
-
-      getCoordinates: function(){
-         var x = radius * Math.sin(this.a) * Math.cos(this.b);
-         var y = radius * Math.sin(this.a) * Math.sin(this.b);
-         var z = radius * Math.cos(this.a);
-         return {'x':x, 'y':y, 'z':z}
-      } ,
-
-      remove: function () {
-        //remove all the objects? 
-        this.el.removeObject3D('mesh');
-      }
-
-    })
-
-    AFRAME.registerComponent('sphereOfAwesomeness', {
-
-      init: function(){
-        //store particle entities
-        this.particles = [];
-        this.count = 0; 
-      }, 
-
-      //consider calling tick for only 100 times 
-      tick: function() {
-          if(this.particles.length < 50){
-            var newp = document.createElement("a-entity");
-            newp.setAttribute("particle");
-            this.el.sceneEl.appendChild(newp); 
-            this.particles.push(newp);
-          }
-      }
-      
+        updatePos: function(y){
+            this.sphere.position.y = y;
+        }
     });
 
+    //build a mesh object that contains all the spheres
+    AFRAME.registerComponent('blanket', {
+        init: function(){
+           this.circles = [];
+           for( var ix = 0; ix < AMOUNTX; ix++ ){
+              for( var iy = 0; iy < AMOUNTY; iy++ ){
+                  var newE = document.createElement("a-entity");
+
+                  var x =  ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 );
+                  var z =  iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); 
+                  var y = YDISPLACE;
+
+                  var colorx = parseInt(map_range(x , MIN, MAX, 0 , 255));
+                  var colorz = parseInt(map_range(z, MIN, MAX, 0, 255));
+
+                  var attr = "x:" + x + "; z:" + z + "; colorx:" + colorx + "; colorz: " + colorz; 
+                  newE.setAttribute("particle" , attr);
+
+                  //append element to the scene 
+                  this.el.sceneEl.appendChild(newE);
+                  this.circles.push(newE); 
+              }
+            }
+        },
+
+        tick: function(){
+            var i = 0;
+            for ( var ix = 0; ix < AMOUNTX; ix ++ ) {
+              for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
+                   var circle = this.circles[i].components.particle;
+                   time += timestep
+                   //perlin!
+                   var y = noise.perlin3(ix * noiseScale + time , iy * noiseScale - time, time);
+                   var final_y = map_range(y, -1 , 1, -400, -150);
+                   circle.updatePos(final_y);
+                   i++;
+              }
+            } 
+        }
+    }); 
+
     function map_range(value, low1, high1, low2, high2) {
-      return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
-    } 
+        return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+    }
+ </script> 
 
- </script>  
-
-    <a-scene>
-        <a-sky color="#AAA"> </a-sky> 
-        <a-entity sphereOfAwesomeness></a-entity>
-
-        <a-entity position="0 0 0">
-            <a-camera></a-camera>
-        </a-entity>
-    </a-scene>
-
+ <a-scene>
+     <a-sky color="black"> </a-sky> 
+     <!-- ~~ lights ~~ --> 
+     <a-light type="point" color="white" position="-5 0 0"></a-light>
+     <a-entity blanket> </a-entity> 
+     <a-camera position="0 0 0"> </a-camera> 
+ </a-scene> 
