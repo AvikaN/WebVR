@@ -25,8 +25,8 @@
             z : {default: 0}
         }, 
         init: function() {
-              var geometry = new THREE.SphereGeometry(3, 5, 5);
-              var ballcolor = "rgb(" + this.data.colorx + "," + this.data.colorz + ", 140)";
+              var geometry = new THREE.SphereGeometry(4, 5, 5);
+              var ballcolor = "rgb(" + this.data.colorx + "," + this.data.colorx + ", 140)";
               var material = new THREE.MeshBasicMaterial({color: ballcolor});
               this.sphere = new THREE.Mesh(geometry, material);
               this.el.setObject3D('mesh', this.sphere);
