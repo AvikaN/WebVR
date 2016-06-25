@@ -10,8 +10,8 @@
     noise.seed(Math.random());
     var MAX = 3000, MIN = -4000 
     var PI2 = Math.PI * 2;
-    var noiseScale = 0.06;
-    var timestep = 0.000003; 
+    var noiseScale = 0.065;
+    var timestep = 0.000005; 
     var time = 0; 
 
     var coordinates = AFRAME.utils.coordinates;
@@ -74,7 +74,7 @@
                    time += timestep
                    //perlin!
                    var y = noise.perlin3(ix * noiseScale + time , iy * noiseScale - time, time);
-                   var final_y = map_range(y, -1 , 1, -400, -150);
+                   var final_y = map_range(y, -1 , 1, -450, -150);
                    circle.updatePos(final_y);
                    i++;
               }
