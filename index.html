@@ -74,7 +74,7 @@
                    time += timestep
                    //perlin!
                    var y = noise.perlin3(ix * noiseScale + time , iy * noiseScale - time, time);
-                   var final_y = map_range(y, -1 , 1, -500, -50);
+                   var final_y = map_range(y, -1 , 1, -500, -200);
                    circle.updatePos(final_y);
                    i++;
               }
