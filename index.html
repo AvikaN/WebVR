@@ -78,7 +78,7 @@
                 });
 
                 this.particle = new THREE.Sprite(material);
-                this.particle.scale.x = this.particle.scale.y = Math.random() * 15 + 15;
+                this.particle.scale.x = this.particle.scale.y = Math.random() * 10 + 15;
                 this.el.setObject3D('particle', this.particle);
 
             },
@@ -118,10 +118,10 @@
 
             getSprite: function(){
              var canvas = document.createElement( 'canvas' );
-              canvas.width = 16;
-              canvas.height = 16;
+              canvas.width = 20;
+              canvas.height = 20;
               var context = canvas.getContext( '2d' );
-              var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+              var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
               gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
               gradient.addColorStop( 0.2, 'rgba(255,255,255,1)' );
               gradient.addColorStop( 0.4, 'rgba(0,100,255,1)' );
