@@ -6,7 +6,7 @@
         <script>
           //tick moves too fast 
           var radius = 225; 
-          var noiseScale = 0.0010;
+          var noiseScale = 0.0025;
           var maxVel = Math.PI / 500;
           noise.seed(Math.random());
           //you can start again when it finishes drawing
@@ -147,7 +147,7 @@
             }, 
 
             tick: function() {
-                if(this.particles.length < 3){
+                if(this.particles.length < 5){
                   var newp = document.createElement("a-entity");
                   newp.setAttribute("particle");
                   this.el.sceneEl.appendChild(newp); 
