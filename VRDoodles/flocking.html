@@ -1,13 +1,107 @@
  <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  <script> 
- 	//autonomous agents
+ 	//autonomous agents 
+ 	//noobish WEBGl 
+ 	//awful implementation
+ 	AFRAME.registerComponent('boid', {
+
+ 		schema : {
+ 			x: {default: 0},
+ 			y: {default: 0},
+ 			z: {default: -10}
+ 		},
+
+ 		init: function(){
+ 			this.bodySize = 10; 
+ 			this.locations = []
+ 			this.spheres = []
+ 			this.maxSpeed = 4; 
+ 			this.maxForce = new THREE.Vector3(0.1, 0.1, 0.1);
+ 			this.wandertheta = 0; 
+
+ 			//need vectors for acceleration, velocity, and location
+ 			//use three vecotrs, it's easier to do vector calculations 
+
+ 			this.location = new THREE.Vector3(this.data.x, this.data.y, this.data.z);
+ 			this.velocity = new THREE.Vector3(0, -2, 0);
+ 			this.desired = new THREE.Vector3(0,0,0);
+ 			this.steer = new THREE.Vector3(0,0,0);
+ 			this.acceleration = new THREE.Vector3(0, 0, 0);
+ 			this.circleLoc = new THREE.Vector3(0,0,0);
+ 			this.offSet = new THREE.Vector3(0,0,0);
+ 			this.target = new THREE.Vector3(0,0,0);
+ 			this.maxSpeed = new THREE.Vector3(0.1,0.1,0.1);
+
+ 			//initialize 10 spheres
+ 			//will have to build in objects more efficiently 
+ 			for(var i = 0; i < this.bodySize; i++){
+	 			var geometry = new THREE.SphereBufferGeometry(0.5, 16, 8);
+	 			var material = new THREE.MeshBasicMaterial({color: "rgb(255,255,255)"});
+	 			this.sphere = new THREE.Mesh(geometry, material);
+	 			this.el.setObject3D('mesh', this.sphere);
+	 			this.sphere.position.x = this.data.x;
+	            this.sphere.position.y = this.data.y;
+	            this.sphere.position.z = this.data.z;
+	            this.locations.push(this.sphere);
+ 			}
+ 		},
+
+ 		tick: function(){
+ 			this.updateBoid();
+ 		},
+
+ 		updateBoid: function(){
+ 			this.velocity.add(this.acceleration);
+ 			this.velocity.max(this.maxSpeed);
+ 			this.location.add(this.velocity);
+ 			this.sphere.position.x = this.location.x; 
+ 			this.sphere.position.y = this.location.y;
+ 			this.sphere.position.z = this.location.z; 
+ 			this.acceleration.multiplyScalar(0);
+ 		},
+
+ 		addForce: function(force){
+ 			this.acceleration.add(force);
+ 		},
+
+ 		seek : function(vector){
+ 			this.desired.subVectors(vector, this.location);
+ 			this.desired.normalize();
+ 			this.desired.multiplyScalar(this.maxSpeed);
+ 			this.steer.subVectors(this.desired, this.velocity);
+ 			this.steer.max(this.maxForce);
+ 			this.applyForce(this.steer);
+ 		},
+
+ 		wander: function(){
+ 			var radius = 25;
+ 			var distance = 80;
+ 			var max = 0.3;
+ 			var min = -0.3;
+ 			this.wandertheta += Math.random() * (max-min) + min; 
+ 			this.circleLoc.copy(this.velocity);
+ 			this.circleLoc.normalize();
+ 			this.circleLoc.multiplyScalar(distance);
+ 			this.circleLoc.add(this.location);
+ 			//you're using circles, so don't have to consider rotation yet
+
+ 			var h = this.heading2D(this.velocity);
+ 			var xVal = radius*Math.cos(this.wandertheta+h);
+ 			var yVal = radius*Math.sin(this.wandertheta+h);
+ 			this.offSet.set(xVal, yVal);
+ 			this.target.addVectors(this.offSet, this.circleLoc);
+ 			this.seek(this.target);
+ 		},
+
+ 		heading2D: function(v){
+ 			return Math.atan2(this.v.y, this.v.x);
+ 		}
+ 	});
  </script> 
 
-
 <a-scene>
-  	<a-sky color="#000"> </a-sky> 
-      <a-entity sphereOfAwesomeness></a-entity>
-		<a-entity position="0 0 0">
-      </a-entity>
+  	<a-sky color="#abc"> </a-sky> 
+    <a-entity sphereOfAwesomeness></a-entity>
+    <a-entity boid> </a-entity> 
 </a-scene> 
 
