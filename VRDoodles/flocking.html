@@ -30,7 +30,7 @@
  			this.circleLoc = new THREE.Vector3(0,0,0);
  			this.offSet = new THREE.Vector3(0,0,0);
  			this.target = new THREE.Vector3(0,0,0);
- 			this.maxSpeed = new THREE.Vector3(0.1,0.1,0.1);
+ 			this.maxSpeed = new THREE.Vector3(0.01,0.01,0.01);
 
  			//initialize 10 spheres
  			//will have to build in objects more efficiently 
@@ -47,12 +47,14 @@
  		},
 
  		tick: function(){
+ 			this.wander();
  			this.updateBoid();
  		},
 
  		updateBoid: function(){
  			this.velocity.add(this.acceleration);
  			this.velocity.max(this.maxSpeed);
+ 			//console.log(this.velocity);
  			this.location.add(this.velocity);
  			this.sphere.position.x = this.location.x; 
  			this.sphere.position.y = this.location.y;
@@ -70,31 +72,30 @@
  			this.desired.multiplyScalar(this.maxSpeed);
  			this.steer.subVectors(this.desired, this.velocity);
  			this.steer.max(this.maxForce);
- 			this.applyForce(this.steer);
+ 			this.addForce(this.steer);
  		},
 
  		wander: function(){
  			var radius = 25;
- 			var distance = 80;
+ 			var distance = 10;
  			var max = 0.3;
  			var min = -0.3;
  			this.wandertheta += Math.random() * (max-min) + min; 
  			this.circleLoc.copy(this.velocity);
  			this.circleLoc.normalize();
  			this.circleLoc.multiplyScalar(distance);
+ 			console.log(this.circleLoc);
  			this.circleLoc.add(this.location);
- 			//you're using circles, so don't have to consider rotation yet
-
  			var h = this.heading2D(this.velocity);
  			var xVal = radius*Math.cos(this.wandertheta+h);
- 			var yVal = radius*Math.sin(this.wandertheta+h);
- 			this.offSet.set(xVal, yVal);
+ 			var yVal = radius*Math.sin(this.wandertheta+h); 
+ 			this.offSet.set(xVal, yVal, 0);
  			this.target.addVectors(this.offSet, this.circleLoc);
  			this.seek(this.target);
  		},
 
  		heading2D: function(v){
- 			return Math.atan2(this.v.y, this.v.x);
+ 			return Math.atan2(v.y, v.x);
  		}
  	});
  </script> 
