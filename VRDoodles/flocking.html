@@ -54,7 +54,6 @@
  		updateBoid: function(){
  			this.velocity.add(this.acceleration);
  			this.velocity.max(this.maxSpeed);
- 			//console.log(this.velocity);
  			this.location.add(this.velocity);
  			this.sphere.position.x = this.location.x; 
  			this.sphere.position.y = this.location.y;
@@ -84,7 +83,6 @@
  			this.circleLoc.copy(this.velocity);
  			this.circleLoc.normalize();
  			this.circleLoc.multiplyScalar(distance);
- 			console.log(this.circleLoc);
  			this.circleLoc.add(this.location);
  			var h = this.heading2D(this.velocity);
  			var xVal = radius*Math.cos(this.wandertheta+h);
