@@ -64,13 +64,6 @@
                     this.pos[ indexPos ++ ] = storePos[i].y;
                     this.pos[ indexPos ++ ] = storePos[i].z;
                 }
-
-
-                /* 
-                var sphereGeometry = new THREE.SphereGeometry(0.5, 16 , 8);
-                var geoMaterial = new THREE.MeshBasicMaterial({color: 0xffff00});
-                this.sphere = new THREE.Mesh(sphereGeometry, geoMaterial); 
-                this.el.setObject3D('sphere', this.sphere);   */
               
                 var material = new THREE.SpriteMaterial( {
                     map: new THREE.CanvasTexture( this.getSprite()),
@@ -86,16 +79,7 @@
             tick: function(){
                   this.drawCount = (this.drawCount + 1) % MAX_POINTS;
                   this.line.geometry.setDrawRange(0, this.drawCount);
-                  //set the position of the sphere with drawCount
-                  //console.log(this.drawCount);
-
                   var index = this.drawCount * 3; 
-
-                  /* 
-                  this.sphere.position.x = this.pos[index++];
-                  this.sphere.position.y = this.pos[index++];
-                  this.sphere.position.z = this.pos[index++]; */
-
                   this.particle.position.x = this.pos[index++];
                   this.particle.position.y = this.pos[index++];
                   this.particle.position.z = this.pos[index++] + 1;
@@ -103,6 +87,7 @@
             },
 
             getCoordinates: function(){
+               //this uses noise  with a random offset for a and b
                var x = radius * Math.sin(this.a) * Math.cos(this.b);
                var y = radius * Math.sin(this.a) * Math.sin(this.b);
                var z = radius * Math.cos(this.a);
