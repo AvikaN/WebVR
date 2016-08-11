@@ -1,173 +1,220 @@
  <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
- <script src="perlin.js"></script> 
+ <html> 
+  <body> 
+    <script> 
+    //flocking algorithm - Daniel Shiffman: Nature of Code & http://threejs.org/examples/canvas_geometry_birds.html
+    //used to explore gazing interaction 
+    function random(min, max){
+      return Math.random() * (max - min) + min;
+    }
 
- <html>
-    <body> 
-        <script>
-          var radius = 150; 
-          var noiseScale = 0.0020;
-          var maxVel = Math.PI / 500;
-          noise.seed(Math.random());
-          //you can start again when it finishes drawing
-          var MAX_POINTS = 3500; 
-          var offset1 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
-          var offset2 = new THREE.Vector3(Math.random() * 100000, Math.random() * 10000, Math.random() * 10000);
-          var particleTexture = THREE.ImageUtils.loadTexture('images/spark.png');
+    function distance(x1,y1,x2,y2){
+      return Math.sqrt((x1 - x2) * (x1 - x2) + (y1-y2) * (y1-y2));
+    }
 
-          AFRAME.registerComponent('particle', {
+    var maxSize = 400;
+    var minSize = -400;
 
-            init: function(){
-                this.three_vectors = [];
-                this.a = Math.random() * (Math.PI * 2);
-                this.b = Math.random() * (Math.PI * 2);
-                this.drawCount = 0; 
-          
-                var geometry = new THREE.BufferGeometry();
-                geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(MAX_POINTS * 3) , 3));
-                geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_POINTS * 3) , 3));
+    //temp 
+    var geometry = new THREE.Geometry();
+    var sprite = new THREE.TextureLoader().load("data/point3.png");
+    var material = new THREE.PointsMaterial({color: "#FFFFB2", size: 5, map: sprite, alphaTest: 0.5, transparent: true});
+    var boids = [];
 
-                var material = new THREE.LineBasicMaterial({linewidth:1 , vertexColors: true, opacity: 1});
-                this.line = new THREE.Line(geometry, material); 
+    AFRAME.registerComponent('boid', {
+      schema:{
+        pos: {
+          type: 'vec3', 
+          default: {x: 0, y: 0 , z: -250}
+        }
+      }, 
 
-                //add line to element
-                this.el.setObject3D('mesh', this.line);
-            
-                var storePos = []
-                var storeCols = []
-                storePos.push(this.getCoordinates());
-                //set the postions from the start, this makes the rendering much more efficient  
-                for (var i = 0; i < MAX_POINTS; i++) {
-                    var v3 = storePos[storePos.length - 1];
-                    var noise1 = noise.perlin3(offset1.x + v3.x * noiseScale, offset1.y + v3.y * noiseScale, offset1.z + v3.z * noiseScale); 
-                    var noise2 = noise.perlin3(offset2.x + v3.x * noiseScale, offset2.y + v3.y * noiseScale, offset2.z + v3.z * noiseScale);
-                    this.a += map_range(noise1, 0, 1, -maxVel, maxVel);
-                    this.b += map_range(noise2, 0, 1, -maxVel, maxVel);
-                    storePos.push(this.getCoordinates()); 
-                    storeCols.push(this.getColors());
-                }
+        init: function(){
+          var pos = this.data.pos; 
+          this.maxspeed = 2;  
+          this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
+          geometry.vertices.push(this.loc); //collect the vertices inside geometry 
+          this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
+            random(-this.maxspeed,this.maxspeed));
+          this.acc = new THREE.Vector3(0,0,0);
+          this.ali = new THREE.Vector3(0,0,0);
+          this.coh = new THREE.Vector3(0,0,0);
+          this.center = new THREE.Vector3(0,0,0);
+          this.neighbor = 100;  
+          this.maxforce = 0.1;
+      }, 
 
-                this.pos = this.line.geometry.attributes.position.array;
-                //console.log(pos.length)
-                this.col = this.line.geometry.attributes.color.array;
-                var indexPos = 0;
-                var indexCol = 0; 
-                
-                for( var i = 0; i < MAX_POINTS; i++){
-                    this.col[indexCol++] = storeCols[i].r;
-                    this.col[indexCol++] = storeCols[i].g;
-                    this.col[indexCol++] = storeCols[i].b;
-                }
+      alignment: function(){
+        var sum = new THREE.Vector3(0,0,0);
+        var count = 0; 
+        for(var i = 0; i < boids.length; i++){
+          if(Math.random() > 0.4) continue; 
+          var bs = boids[i];
+          var d = this.loc.distanceTo(bs.components.boid.loc);
+          if( d > 0 && d <= this.neighbor){
+            sum.add(bs.components.boid.vel);
+            count++; 
+          }
+        }
+        if(count > 0)
+        {
+          sum.divideScalar(count);
+          var l = sum.length();
+          if( l > this.maxforce){
+             sum.divideScalar(l / this.maxforce);
+          }
+        }
+        this.acc.add(sum); 
+      },
 
-                for ( var i = 0; i < MAX_POINTS; i++) {
-                    this.pos[ indexPos ++ ] = storePos[i].x;
-                    this.pos[ indexPos ++ ] = storePos[i].y;
-                    this.pos[ indexPos ++ ] = storePos[i].z;
-                }
+      cohesion: function(){
+        var posSum = new THREE.Vector3(0,0,0);
+        var steer = new THREE.Vector3(0,0,0);
+        var count = 0; 
+        for(var i = 0 ; i < boids.length; i++){
+          if (Math.random() > 0.4) continue;
+          var bs = boids[i];
+          var bloc = bs.components.boid.loc;
+          var d = bloc.distanceTo(this.loc); 
+          if( d > 0 && d <= this.neighbor){
+            posSum.add(bloc);
+            count++; 
+          }
+        }
+        if(count > 0){
+          posSum.divideScalar(count);
+        }
+        steer.subVectors(posSum, this.loc);
+        var l = steer.length();
+        if (l > this.maxforce){
+          steer.divideScalar(l/this.maxforce);
+        }
+        this.acc.add(steer);
+      }, 
 
+      seperation: function(){
+        var posSum = new THREE.Vector3(0,0,0);
+        var repulse = new THREE.Vector3(0,0,0);
+        for(var i = 0; i < boids.length; i++){
+          if(Math.random() > 0.4) continue; 
+          var bs = boids[i];
+          var bloc = bs.components.boid.loc;
+          var d = bloc.distanceTo(this.loc);
+          if( d > 0 && d <= this.neighbor){
+            repulse.subVectors(this.loc, bloc);
+            repulse.normalize();
+            repulse.divideScalar(d);
+            posSum.add(repulse);
+          }
+        }
+        this.acc.add(posSum);
+      }, 
 
-                /* 
-                var sphereGeometry = new THREE.SphereGeometry(0.5, 16 , 8);
-                var geoMaterial = new THREE.MeshBasicMaterial({color: 0xffff00});
-                this.sphere = new THREE.Mesh(sphereGeometry, geoMaterial); 
-                this.el.setObject3D('sphere', this.sphere);   */
-              
-                var material = new THREE.SpriteMaterial( {
-                    map: new THREE.CanvasTexture( this.getSprite()),
-                    blending: THREE.AdditiveBlending
-                });
+      boundary: function(){
+        if(this.loc.x > maxSize) { 
+          this.loc.x = minSize;
+        }
+        if(this.loc.x < minSize){
+          this.loc.x = maxSize;
+        }
+        if(this.loc.y > maxSize) { 
+          this.loc.y = minSize;
+        }
+        if(this.loc.y < minSize){
+          this.loc.y = maxSize;
+        }
+        if(this.loc.z > maxSize) { 
+          this.loc.z = minSize;
+        }
+        if(this.loc.z < minSize){
+          this.loc.z = maxSize;
+        }
+      }, 
 
-                this.particle = new THREE.Sprite(material);
-                this.particle.scale.x = this.particle.scale.y = Math.random() * 10 + 15;
-                this.el.setObject3D('particle', this.particle);
+      //target is 0,0,0
+      repulse: function(target){
+          var distance = this.loc.distanceTo(target);
 
-            },
+          if(distance < 200){
+            var steer = new THREE.Vector3();
+            steer.subVectors(this.loc, target);
+            steer.multiplyScalar(0.5 / distance);
+            this.acc.add(steer);
+          }
+      }, 
 
-            tick: function(){
-                  this.drawCount = (this.drawCount + 1) % MAX_POINTS;
-                  this.line.geometry.setDrawRange(0, this.drawCount);
-                  //set the position of the sphere with drawCount
-                  //console.log(this.drawCount);
+      //it might work
+      seek: function(target){
+          //used to seek - target == gaze
+          var desired = new THREE.Vector3();
+          var steer = new THREE.Vector3();
+          desired.subVectors(target, this.loc);
+          steer.subVectors(desired, this.vel); 
+          var l = steer.length();
+          if( l > this.maxforce){
+             steer.divideScalar(l / this.maxforce);
+          }
+          this.acc.add(steer);
+      }, 
 
-                  var index = this.drawCount * 3; 
+      move: function(){
+        this.vel.add(this.acc);
+        var len = this.vel.length();
+        if (len > this.maxspeed){
+          //this is how you clamp data
+          this.vel.divideScalar( len / this.maxspeed);  
+        }
+        this.loc.add(this.vel);
+        this.acc.set(0,0,0);
+      },
 
-                  /* 
-                  this.sphere.position.x = this.pos[index++];
-                  this.sphere.position.y = this.pos[index++];
-                  this.sphere.position.z = this.pos[index++]; */
+      flock: function(){
+        this.alignment();
+        this.cohesion();
+        this.seperation();
+        this.repulse(this.center);
+      },
 
-                  this.particle.position.x = this.pos[index++];
-                  this.particle.position.y = this.pos[index++];
-                  this.particle.position.z = this.pos[index++] + 1;
+      run: function(){
+        if(Math.random() > 0.70){
+          this.flock();
+        }
+        this.move();
+        this.boundary();
+      }
+    });
 
-            },
+    AFRAME.registerComponent('flock', {
+      init: function(){
+        this.count = 0; 
+        this.numBoids = 250;
+        for(var i = 0; i < this.numBoids; i++){
+            var newb = document.createElement("a-entity");
+                  newb.setAttribute("boid");
+                  this.el.sceneEl.appendChild(newb);  
+                  boids.push(newb);
+        }     
+        var birds = new THREE.Points(geometry, material);
+        this.el.setObject3D('particle', birds);
+      }, 
 
-            getCoordinates: function(){
-               var x = radius * Math.sin(this.a) * Math.cos(this.b);
-               var y = radius * Math.sin(this.a) * Math.sin(this.b);
-               var z = radius * Math.cos(this.a);
-               return {'x':x, 'y':y, 'z':z}
-            } ,
+      tick: function(){
+          geometry.verticesNeedUpdate = true;
+          for(var i = 0; i < this.numBoids; i++){
+              var b = boids[i].components.boid;
+              b.run();
+          }
+      }
 
-            getColors: function(){
-               var red = Math.sin(this.a) * Math.cos(this.b);
-               var green = Math.sin(this.a) * Math.sin(this.b);
-               var blue = 0.55;
-               return {'r': red , 'g':green, 'b': blue}
-            },
+    });
 
-            getSprite: function(){
-             var canvas = document.createElement( 'canvas' );
-              canvas.width = 20;
-              canvas.height = 20;
-              var context = canvas.getContext( '2d' );
-              var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-              gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
-              gradient.addColorStop( 0.2, 'rgba(255,255,255,1)' );
-              gradient.addColorStop( 0.4, 'rgba(0,100,255,1)' );
-              gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
-              context.fillStyle = gradient;
-              context.fillRect( 0, 0, canvas.width, canvas.height );
-              return canvas;
-            },
-
-            remove: function () {
-              //remove all the objects? 
-              this.el.removeObject3D('mesh');
-            }
-
-          })
-
-          AFRAME.registerComponent('sphereOfAwesomeness', {
-
-            init: function(){
-              //store particle entities
-              this.particles = [];
-              this.count = 0; 
-            }, 
-
-            tick: function() {
-                if(this.particles.length < 10){
-                  var newp = document.createElement("a-entity");
-                  newp.setAttribute("particle");
-                  this.el.sceneEl.appendChild(newp); 
-                  this.particles.push(newp);
-                }
-            }
-            
-          });
-
-          function map_range(value, low1, high1, low2, high2) {
-            return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
-          } 
-       </script>  
-          <a-scene>
-              <a-sky color="#000"> </a-sky> 
-              <a-entity sphereOfAwesomeness></a-entity>
-
-              <a-entity position="0 0 0">
-                  <a-camera></a-camera>
-              </a-entity>
-          </a-scene>
-    </body>
- </html>
-
+    </script> 
+    <a-scene>
+            <a-sky color="#323299"> </a-sky> 
+            <a-entity flock> </a-entity>
+            <a-entity position="0 0 0">
+                <a-camera></a-camera>
+            </a-entity>
+        </a-scene>
+  </body> 
+ </html> 
