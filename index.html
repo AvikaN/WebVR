@@ -138,7 +138,7 @@
       repulse: function(target){
           var distance = this.loc.distanceTo(target);
 
-          if(distance < 200){
+          if(distance < 150){
             var steer = new THREE.Vector3();
             steer.subVectors(this.loc, target);
             steer.multiplyScalar(0.5 / distance);
@@ -172,6 +172,7 @@
       },
 
       flock: function(target){
+        console.log(target);
         this.seek(target);
         this.alignment();
         this.cohesion();
@@ -204,7 +205,7 @@
 
       tick: function(){
           geometry.verticesNeedUpdate = true;
-          var seek = new THREE.Vector3(cursorX,cursorY,-300);
+          var seek = new THREE.Vector3(cursorX, cursorY,-300);
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
               b.run(seek);
@@ -216,7 +217,7 @@
     </script> 
     <a-scene>
         <a-sky color="#323299"> </a-sky>
-        <a-sphere color="white" position="0 0 -300"> </a-sphere>
+        <a-sphere id="target" color="white" position="0 0 -300"> </a-sphere>
         <a-entity flock> </a-entity>
         <a-camera id="camera"> 
           <a-entity id="cursor" cursor="fuse: true; maxDistance: 30; timeout: 500"
