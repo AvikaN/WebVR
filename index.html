@@ -12,8 +12,8 @@
       return Math.sqrt((x1 - x2) * (x1 - x2) + (y1-y2) * (y1-y2));
     }
 
-    var maxSize = 400;
-    var minSize = -400;
+    var maxSize = 500;
+    var minSize = -500;
 
     //temp 
     var geometry = new THREE.Geometry();
@@ -41,14 +41,15 @@
           this.coh = new THREE.Vector3(0,0,0);
           this.center = new THREE.Vector3(0,0,0);
           this.neighbor = 100;  
-          this.maxforce = 0.1;
+          this.maxforce = 0.08;
+          this.seekforce = 0.1;
       }, 
 
       alignment: function(){
         var sum = new THREE.Vector3(0,0,0);
         var count = 0; 
         for(var i = 0; i < boids.length; i++){
-          if(Math.random() > 0.4) continue; 
+          if(Math.random() > 0.6) continue; 
           var bs = boids[i];
           var d = this.loc.distanceTo(bs.components.boid.loc);
           if( d > 0 && d <= this.neighbor){
@@ -72,7 +73,7 @@
         var steer = new THREE.Vector3(0,0,0);
         var count = 0; 
         for(var i = 0 ; i < boids.length; i++){
-          if (Math.random() > 0.4) continue;
+          if (Math.random() > 0.7) continue;
           var bs = boids[i];
           var bloc = bs.components.boid.loc;
           var d = bloc.distanceTo(this.loc); 
@@ -96,7 +97,7 @@
         var posSum = new THREE.Vector3(0,0,0);
         var repulse = new THREE.Vector3(0,0,0);
         for(var i = 0; i < boids.length; i++){
-          if(Math.random() > 0.3) continue; 
+          if(Math.random() > 0.5) continue; 
           var bs = boids[i];
           var bloc = bs.components.boid.loc;
           var d = bloc.distanceTo(this.loc);
@@ -151,8 +152,8 @@
           desired.subVectors(target, this.loc);
           steer.subVectors(desired, this.vel); 
           var l = steer.length();
-          if( l > this.maxforce){
-             steer.divideScalar(l / this.maxforce);
+          if( l > this.seekforce){
+             steer.divideScalar(l / this.seekforce);
           }
           this.acc.add(steer);
       }, 
@@ -188,7 +189,7 @@
     AFRAME.registerComponent('flock', {
       init: function(){
         this.count = 0; 
-        this.numBoids = 250;
+        this.numBoids = 25;
         for(var i = 0; i < this.numBoids; i++){
             var newb = document.createElement("a-entity");
                   newb.setAttribute("boid");
@@ -200,9 +201,8 @@
       }, 
 
       tick: function(){
-          
           geometry.verticesNeedUpdate = true;
-          var seek = new THREE.Vector3(0,0,-280);
+          var seek = new THREE.Vector3(0,0,-300);
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
               b.run(seek);
@@ -214,10 +214,12 @@
     </script> 
     <a-scene>
         <a-sky color="#323299"> </a-sky> 
-        <a-entity flock> </a-entity>
-        <a-camera> 
-          <a-entity cursor="fuse: true; maxDistance: 30; timeout: 500"
-                  position="0 0 -280"
+        <a-sphere color="red" position="0 0 -300"> </a-sphere> 
+        <a-camera id="camera"> 
+          <a-entity flock> </a-entity>
+          <a-sphere position="0 0 -260"> </a-sphere> 
+          <a-entity id="cursor" cursor="fuse: true; maxDistance: 30; timeout: 500"
+                  position="0 0 -30"
                   geometry="primitive: ring"
                   material="color: white; shader: flat;">
           </a-entity>
