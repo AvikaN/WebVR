@@ -18,7 +18,7 @@
     //temp 
  		var geometry = new THREE.Geometry();
     var sprite = new THREE.TextureLoader().load("data/point3.png");
- 		var material = new THREE.PointsMaterial({color: "#FFFFB2", size: 5, map: sprite, alphaTest: 0.5, transparent: true});
+ 		var material = new THREE.PointsMaterial({color: "#FFFFB2", size: 2, map: sprite, alphaTest: 0.5, transparent: true});
  		var boids = [];
 
  		AFRAME.registerComponent('boid', {
@@ -96,7 +96,7 @@
  				var posSum = new THREE.Vector3(0,0,0);
         var repulse = new THREE.Vector3(0,0,0);
  				for(var i = 0; i < boids.length; i++){
-          if(Math.random() > 0.4) continue; 
+          if(Math.random() > 0.3) continue; 
  					var bs = boids[i];
  					var bloc = bs.components.boid.loc;
  					var d = bloc.distanceTo(this.loc);
@@ -168,16 +168,17 @@
  				this.acc.set(0,0,0);
  			},
 
- 			flock: function(){
+ 			flock: function(target){
+        this.seek(target);
  				this.alignment();
  				this.cohesion();
  			  this.seperation();
         this.repulse(this.center);
  			},
 
- 			run: function(){
-        if(Math.random() > 0.70){
-          this.flock();
+ 			run: function(target){
+        if(Math.random() > 0.60){
+          this.flock(target);
         }
  				this.move();
  				this.boundary();
@@ -187,7 +188,7 @@
  		AFRAME.registerComponent('flock', {
  			init: function(){
         this.count = 0; 
- 				this.numBoids = 250;
+ 				this.numBoids = 100;
  				for(var i = 0; i < this.numBoids; i++){
 				  	var newb = document.createElement("a-entity");
               		newb.setAttribute("boid");
@@ -199,10 +200,12 @@
  			}, 
 
  			tick: function(){
+          
           geometry.verticesNeedUpdate = true;
+          var seek = new THREE.Vector3(0,0,-280);
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
-              b.run();
+              b.run(seek);
           }
  			}
 
@@ -210,11 +213,13 @@
 
  		</script> 
  		<a-scene>
-            <a-sky color="#323299"> </a-sky> 
-            <a-entity flock> </a-entity>
-            <a-entity position="0 0 0">
-                <a-camera></a-camera>
-            </a-entity>
-        </a-scene>
+        <a-sky color="#323299"> </a-sky> 
+        <a-entity flock> </a-entity>
+        <a-entity cursor="fuse: true; maxDistance: 30; timeout: 500"
+                position="0 0 -280"
+                geometry="primitive: ring"
+                material="color: white; shader: flat;">
+        </a-entity>
+    </a-scene>
  	</body> 
  </html> 
