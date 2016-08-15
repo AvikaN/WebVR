@@ -4,6 +4,8 @@
     <script> 
     //flocking algorithm - Daniel Shiffman: Nature of Code & http://threejs.org/examples/canvas_geometry_birds.html
     //used to explore gazing interaction 
+    var cursorX = 0; 
+    var cursorY = 0; 
     function random(min, max){
       return Math.random() * (max - min) + min;
     }
@@ -202,7 +204,7 @@
 
       tick: function(){
           geometry.verticesNeedUpdate = true;
-          var seek = new THREE.Vector3(0,0,-300);
+          var seek = new THREE.Vector3(cursorX,cursorY,-300);
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
               b.run(seek);
@@ -213,11 +215,10 @@
 
     </script> 
     <a-scene>
-        <a-sky color="#323299"> </a-sky> 
-        <!--<a-sphere color="red" position="0 0 -300"> </a-sphere> -->
+        <a-sky color="#323299"> </a-sky>
+        <a-sphere color="white" position="0 0 -300"> </a-sphere>
+        <a-entity flock> </a-entity>
         <a-camera id="camera"> 
-          <a-entity flock> </a-entity>
-          <a-sphere position="0 0 -260"> </a-sphere> 
           <a-entity id="cursor" cursor="fuse: true; maxDistance: 30; timeout: 500"
                   position="0 0 -30"
                   geometry="primitive: ring"
@@ -225,5 +226,14 @@
           </a-entity>
         </a-camera>
     </a-scene>
+    <script> 
+        function seekTarget(){
+          var ele = document.querySelector("#camera");
+          rotation = ele.components.rotation.data;
+          cursorX = rotation.x; 
+          cursorY = rotation.y; 
+        }
+        setInterval(seekTarget, 1000);
+    </script>
   </body> 
  </html> 
