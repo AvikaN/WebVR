@@ -172,7 +172,7 @@
       },
 
       flock: function(target){
-        console.log(target);
+        //console.log(target);
         this.seek(target);
         this.alignment();
         this.cohesion();
@@ -205,7 +205,7 @@
 
       tick: function(){
           geometry.verticesNeedUpdate = true;
-          var seek = new THREE.Vector3(cursorX, cursorY,-300);
+          var seek = new THREE.Vector3(0, 0,-300);
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
               b.run(seek);
@@ -217,23 +217,32 @@
     </script> 
     <a-scene>
         <a-sky color="#323299"> </a-sky>
-        <a-sphere id="target" color="white" position="0 0 -300"> </a-sphere>
+        <a-sphere id="target" color="orange" position="0 0 -100"> </a-sphere>
+        <a-sphere color="orange" position="100 0 -100"> </a-sphere>
+        <a-sphere color="orange" position="-100 0 -100"> </a-sphere>
         <a-entity flock> </a-entity>
         <a-camera id="camera"> 
           <a-entity id="cursor" cursor="fuse: true; maxDistance: 30; timeout: 500"
-                  position="0 0 -30"
-                  geometry="primitive: ring"
-                  material="color: white; shader: flat;">
-          </a-entity>
+                    position="0 0 -30"
+                    geometry="primitive: ring"
+                    material="color: white; shader: flat;">
+            </a-entity>
         </a-camera>
     </a-scene>
     <script> 
         function seekTarget(){
           var ele = document.querySelector("#camera");
           rotation = ele.components.rotation.data;
-          cursorX = rotation.x; 
-          cursorY = rotation.y; 
+          // cursorX = rotation.x; 
+          // cursorY = rotation.y; 
+          //console.log(cursorX, cursorY);
         }
+
+        document.onmousemove = function(e){
+          //cursorX = e.pageX; 
+          //cursorY = e.pageY; 
+        }
+
         setInterval(seekTarget, 1000);
     </script>
   </body> 
