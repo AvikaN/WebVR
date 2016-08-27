@@ -2,8 +2,6 @@
  <html> 
   <body> 
     <script> 
-    //flocking algorithm - Daniel Shiffman: Nature of Code & http://threejs.org/examples/canvas_geometry_birds.html
-    //used to explore gazing interaction 
     var cursorX = 0; 
     var cursorY = 0; 
     function random(min, max){
@@ -14,26 +12,38 @@
       return Math.sqrt((x1 - x2) * (x1 - x2) + (y1-y2) * (y1-y2));
     }
 
-    var maxSize = 500;
-    var minSize = -500;
+    var maxSize = 600;
+    var minSize = -600;
+    var colors = []; 
+    var numBoids = 100; 
+
+    for(var i = 0; i < numBoids; i++){
+      colors[i] = new THREE.Color(0xffffff);
+    }
+
+    //make predator black
+    colors[i] = new THREE.Color(0x000000);
 
     //temp 
     var geometry = new THREE.Geometry();
+    geometry.colors = colors
+
     var sprite = new THREE.TextureLoader().load("data/point3.png");
-    var material = new THREE.PointsMaterial({color: "#FFFFB2", size: 2, map: sprite, alphaTest: 0.5, transparent: true});
+    //all the points have the samem material 
+    var material = new THREE.PointsMaterial({vertexColors: THREE.VertexColors ,size: 2, map: sprite,alphaTest: 0.5, transparent: true});
     var boids = [];
 
     AFRAME.registerComponent('boid', {
       schema:{
-        pos: {
+        position: {
           type: 'vec3', 
-          default: {x: 0, y: 0 , z: -250}
+          default: {x: 0, y: 0 , z: -200}
         }
       }, 
 
         init: function(){
-          var pos = this.data.pos; 
-          this.maxspeed = 2;  
+          var pos = this.data.position; 
+          this.maxspeed = 1.35;  
           this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
           geometry.vertices.push(this.loc); //collect the vertices inside geometry 
           this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
@@ -42,9 +52,10 @@
           this.ali = new THREE.Vector3(0,0,0);
           this.coh = new THREE.Vector3(0,0,0);
           this.center = new THREE.Vector3(0,0,0);
-          this.neighbor = 100;  
-          this.maxforce = 0.08;
-          this.seekforce = 0.1;
+          this.wallVector = new THREE.Vector3(0,0,0);
+          this.neighbor = 50;  
+          this.maxforce = 0.070;
+          this.seekforce = 0.035;
       }, 
 
       alignment: function(){
@@ -75,7 +86,7 @@
         var steer = new THREE.Vector3(0,0,0);
         var count = 0; 
         for(var i = 0 ; i < boids.length; i++){
-          if (Math.random() > 0.7) continue;
+          if (Math.random() > 0.8) continue;
           var bs = boids[i];
           var bloc = bs.components.boid.loc;
           var d = bloc.distanceTo(this.loc); 
@@ -95,11 +106,11 @@
         this.acc.add(steer);
       }, 
 
-      seperation: function(){
+      separation: function(){
         var posSum = new THREE.Vector3(0,0,0);
         var repulse = new THREE.Vector3(0,0,0);
         for(var i = 0; i < boids.length; i++){
-          if(Math.random() > 0.5) continue; 
+          //if(Math.random() > 0.2) continue; 
           var bs = boids[i];
           var bloc = bs.components.boid.loc;
           var d = bloc.distanceTo(this.loc);
@@ -114,27 +125,14 @@
       }, 
 
       boundary: function(){
-        if(this.loc.x > maxSize) { 
-          this.loc.x = minSize;
-        }
-        if(this.loc.x < minSize){
-          this.loc.x = maxSize;
-        }
-        if(this.loc.y > maxSize) { 
-          this.loc.y = minSize;
-        }
-        if(this.loc.y < minSize){
-          this.loc.y = maxSize;
-        }
-        if(this.loc.z > maxSize) { 
-          this.loc.z = minSize;
-        }
-        if(this.loc.z < minSize){
-          this.loc.z = maxSize;
-        }
+        if(this.loc.x > maxSize) { this.loc.x = minSize; }
+        if(this.loc.x < minSize) { this.loc.x = maxSize; }
+        if(this.loc.y > maxSize) { this.loc.y = minSize; }
+        if(this.loc.y < minSize) { this.loc.y = maxSize; }
+        if(this.loc.z > maxSize) { this.loc.z = minSize; }
+        if(this.loc.z < minSize) { this.loc.z = maxSize; }
       }, 
 
-      //target is 0,0,0
       repulse: function(target){
           var distance = this.loc.distanceTo(target);
 
@@ -146,9 +144,18 @@
           }
       }, 
 
-      //it might work
+      repulsePredator: function(target){
+          var distance = this.loc.distanceTo(target);
+
+          if(distance < 100){
+            var steer = new THREE.Vector3();
+            steer.subVectors(this.loc, target);
+            steer.multiplyScalar(0.5 / distance);
+            this.acc.add(steer);
+          }
+      }, 
+
       seek: function(target){
-          //used to seek - target == gaze
           var desired = new THREE.Vector3();
           var steer = new THREE.Vector3();
           desired.subVectors(target, this.loc);
@@ -160,93 +167,182 @@
           this.acc.add(steer);
       }, 
 
+      avoid: function(target){
+          var steer = new THREE.Vector3();
+          steer.copy(this.loc);
+          steer.sub( target );
+          steer.multiplyScalar( 1 / this.loc.distanceToSquared( target ) );
+          return steer;
+      },
+
+      avoidwalls: function(){
+          this.wallVector.set(minSize , this.loc.y, this.loc.z);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(4);
+          this.acc.add(this.wallVector);
+
+          this.wallVector.set(maxSize , this.loc.y, this.loc.z);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(4);
+          this.acc.add(this.wallVector);
+
+          this.wallVector.set(this.loc.x , minSize, this.loc.z);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(4);
+          this.acc.add(this.wallVector);
+
+          this.wallVector.set(this.loc.x , maxSize, this.loc.z);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(4);
+          this.acc.add(this.wallVector);
+
+          this.wallVector.set(this.loc.x , this.loc.y , minSize);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(4);
+          this.acc.add(this.wallVector);
+
+          this.wallVector.set(this.loc.x , this.loc.y , maxSize);
+          this.wallVector = this.avoid( this.wallVector );
+          this.wallVector.multiplyScalar(5);
+          this.acc.add(this.wallVector);
+      }, 
+
       move: function(){
         this.vel.add(this.acc);
         var len = this.vel.length();
         if (len > this.maxspeed){
-          //this is how you clamp data
           this.vel.divideScalar( len / this.maxspeed);  
         }
         this.loc.add(this.vel);
         this.acc.set(0,0,0);
       },
 
-      flock: function(target){
-        //console.log(target);
-        this.seek(target);
+      flock: function(camera, predator){
+        this.seek(camera);
+        this.repulsePredator(predator);
         this.alignment();
         this.cohesion();
-        this.seperation();
+        this.separation();
         this.repulse(this.center);
       },
 
-      run: function(target){
+      run: function(target, avoid){
+        this.avoidwalls();
         if(Math.random() > 0.60){
-          this.flock(target);
+          this.flock(target, avoid);
         }
         this.move();
-        this.boundary();
       }
     });
 
     AFRAME.registerComponent('flock', {
       init: function(){
         this.count = 0; 
-        this.numBoids = 25;
+        this.numBoids = numBoids;
         for(var i = 0; i < this.numBoids; i++){
             var newb = document.createElement("a-entity");
                   newb.setAttribute("boid");
+                  newb.setAttribute("class", "boid");
                   this.el.sceneEl.appendChild(newb);  
                   boids.push(newb);
-        }     
+        }
+
+        this.predator = document.createElement("a-entity"); 
+        this.predator.setAttribute("predator");
+        this.predator.setAttribute("class", "predator");
+        this.el.sceneEl.appendChild(this.predator);
+
         var birds = new THREE.Points(geometry, material);
         this.el.setObject3D('particle', birds);
       }, 
 
       tick: function(){
           geometry.verticesNeedUpdate = true;
-          var seek = new THREE.Vector3(0, 0,-300);
+          var cam = document.querySelector("#main-cam").components.camera.camera; 
+          var direction = cam.getWorldDirection();
+          direction.multiplyScalar(350);
+
+          var p = this.predator.components.predator;
+          p.run();
+
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
-              b.run(seek);
+              b.run(direction, p.loc);
           }
       }
 
     });
 
+    //add  a predator
+    //have the movers separate from the predator
+    AFRAME.registerComponent('predator', {
+        schema:{
+          position: {
+            type: 'vec3', 
+            default: {x: 0, y: 0 , z: -200}
+          }
+        }, 
+
+        init: function(){ 
+          var pos = this.data.position; 
+          this.maxspeed = 2;  
+          this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
+          geometry.vertices.push(this.loc); //collect the vertices inside geometry 
+          this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
+            random(-this.maxspeed,this.maxspeed));
+          this.acc = new THREE.Vector3(0,0,0);
+          this.neighbor = 50;  
+          this.seekforce = 0.1; 
+        }, 
+
+        move: function(){
+          this.vel.add(this.acc);
+          var len = this.vel.length();
+          if (len > this.maxspeed){
+            this.vel.divideScalar( len / this.maxspeed);  
+          }
+          this.loc.add(this.vel);
+          this.acc.set(0,0,0);
+        },
+
+        run: function(){
+          if(Math.random() > 0.60){
+            this.seek();
+          }
+          this.move();
+        },
+
+        seek: function(){
+          var target = new THREE.Vector3(); 
+
+          for(var i = 0; i < boids.length; i++){
+              var b = boids[i].components.boid;
+              target.add(b.loc);
+          }
+
+          if(boids.length > 0){
+            target.divideScalar(boids.length);
+          }
+
+          var desired = new THREE.Vector3();
+          var steer = new THREE.Vector3();
+          desired.subVectors(target, this.loc);
+          steer.subVectors(desired, this.vel); 
+          var l = steer.length();
+          if( l > this.seekforce){
+             steer.divideScalar(l / this.seekforce);
+          }
+          this.acc.add(steer);
+        }
+
+    });
+
     </script> 
     <a-scene>
-        <a-sky color="#323299"> </a-sky>
-        <a-camera>
-          <a-sphere id="target" color="orange" position="0 0 -100"> </a-sphere>
-          <a-sphere color="orange" position="100 0 -100"> </a-sphere>
-          <a-sphere color="orange" position="-100 0 -100"> </a-sphere>
-          <a-entity flock> </a-entity>
-        </a-camera> 
-        <a-camera active="true" id="camera"> 
-          <a-sphere color="orange" position="0 0 -100"> </a-sphere>
-          <a-entity id="cursor" cursor="fuse: true; maxDistance: 30; timeout: 500"
-                    position="0 0 -30"
-                    geometry="primitive: ring"
-                    material="color: white; shader: flat;">
-            </a-entity>
-        </a-camera>
+      <a-sky color="#236B8E"> </a-sky>
+      <a-entity flock> </a-entity>
+      <a-camera id="main-cam" position="0 0 0"> 
+      </a-camera> 
     </a-scene>
-    <script> 
-        function seekTarget(){
-          var ele = document.querySelector("#camera");
-          rotation = ele.components.rotation.data;
-          // cursorX = rotation.x; 
-          // cursorY = rotation.y; 
-          //console.log(cursorX, cursorY);
-        }
-
-        document.onmousemove = function(e){
-          //cursorX = e.pageX; 
-          //cursorY = e.pageY; 
-        }
-
-        setInterval(seekTarget, 1000);
-    </script>
   </body> 
  </html> 
