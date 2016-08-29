@@ -1,7 +1,10 @@
  <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
  <html> 
-  <body> 
+  <body>
     <script> 
+    //birding code from http://threejs.org/examples/canvas_geometry_birds.html
+    //and Daniel Shiffman Nature of Code
+    //clean up your code
     var cursorX = 0; 
     var cursorY = 0; 
     function random(min, max){
@@ -18,7 +21,7 @@
     var numBoids = 100; 
 
     for(var i = 0; i < numBoids; i++){
-      colors[i] = new THREE.Color(0xffffff);
+      colors[i] = new THREE.Color(0x00688B);
     }
 
     //make predator black
@@ -235,6 +238,7 @@
       }
     });
 
+    //you're using AFRame components 
     AFRAME.registerComponent('flock', {
       init: function(){
         this.count = 0; 
@@ -334,15 +338,36 @@
           }
           this.acc.add(steer);
         }
-
     });
 
+    AFRAME.registerComponent('background', {
+        //try creating your own scene 
+        //just one sphere and importing it 
+        init: function(){
+            //add objects to the scene 
+            //the current method you're using to load in the object doesn't work 
+            //so objectLoader loads json resource, makes use of the .type attributes to map them to their original calsses
+            //add the types did get imported and added to the scene 
+            var loader = new THREE.ObjectLoader();
+            var scene = document.querySelector("#scene").object3D;
+            var element = this.el; 
+            loader.load( 'js/scene.json', function ( object ) {
+                scene.add( object );
+            });
+        }
+    }); 
+
     </script> 
-    <a-scene>
-      <a-sky color="#236B8E"> </a-sky>
-      <a-entity flock> </a-entity>
-      <a-camera id="main-cam" position="0 0 0"> 
+    <a-scene id="scene">
+      <a-sky color="#caf8f1"> </a-sky>
+      <!-- <a-entity flock> </a-entity> -->
+      <a-entity background> </a-entity>  
+      <a-camera id="main-cam" position="0 79 0"> 
       </a-camera> 
     </a-scene>
   </body> 
+  <script> 
+      var scene = document.querySelector("#scene");
+      console.log(scene.object3D);
+  </script>
  </html> 
