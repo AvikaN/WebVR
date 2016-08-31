@@ -19,9 +19,10 @@
     var minSize = -600;
     var colors = []; 
     var numBoids = 100; 
+    var world; 
 
     for(var i = 0; i < numBoids; i++){
-      colors[i] = new THREE.Color(0x00688B);
+      colors[i] = new THREE.Color(0xFFFFFF);
     }
 
     //make predator black
@@ -37,7 +38,7 @@
     var boids = [];
 
     AFRAME.registerComponent('boid', {
-      schema:{
+    schema  :{
         position: {
           type: 'vec3', 
           default: {x: 0, y: 0 , z: -200}
@@ -341,33 +342,21 @@
     });
 
     AFRAME.registerComponent('background', {
-        //try creating your own scene 
-        //just one sphere and importing it 
         init: function(){
-            //add objects to the scene 
-            //the current method you're using to load in the object doesn't work 
-            //so objectLoader loads json resource, makes use of the .type attributes to map them to their original calsses
-            //add the types did get imported and added to the scene 
             var loader = new THREE.ObjectLoader();
             var scene = document.querySelector("#scene").object3D;
-            var element = this.el; 
-            loader.load( 'js/scene.json', function ( object ) {
-                scene.add( object );
-            });
+            loader.load( 'js/scene.js', function (object){
+                scene.add(object);
+            }); 
         }
     }); 
-
     </script> 
     <a-scene id="scene">
-      <a-sky color="#caf8f1"> </a-sky>
-      <!-- <a-entity flock> </a-entity> -->
+      <a-sky color="#000000"> </a-sky>
       <a-entity background> </a-entity>  
-      <a-camera id="main-cam" position="0 79 0"> 
+      <a-entity flock> </a-entity>
+      <a-camera id="main-cam" position="0 0 0"> 
       </a-camera> 
     </a-scene>
   </body> 
-  <script> 
-      var scene = document.querySelector("#scene");
-      console.log(scene.object3D);
-  </script>
  </html> 
