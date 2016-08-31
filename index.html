@@ -4,9 +4,17 @@
     <script> 
     //birding code from http://threejs.org/examples/canvas_geometry_birds.html
     //and Daniel Shiffman Nature of Code
-    //clean up your code
-    var cursorX = 0; 
-    var cursorY = 0; 
+    //remove points geometry and add in point lights 
+    var intensity = 10;
+    var distance = 1000;
+    var decay = 2.0;
+    var maxSize = 600;
+    var minSize = -600;
+    var colors = []; 
+    var numBoids = 10; 
+    var sphere = new THREE.SphereGeometry(0.50, 16, 8);
+    var color = 0x0040ff; 
+
     function random(min, max){
       return Math.random() * (max - min) + min;
     }
@@ -15,41 +23,37 @@
       return Math.sqrt((x1 - x2) * (x1 - x2) + (y1-y2) * (y1-y2));
     }
 
-    var maxSize = 600;
-    var minSize = -600;
-    var colors = []; 
-    var numBoids = 100; 
-    var world; 
+   
+    // for(var i = 0; i < numBoids; i++){
+    //   colors[i] = new THREE.Color(0xFFFFFF);
+    // }
 
-    for(var i = 0; i < numBoids; i++){
-      colors[i] = new THREE.Color(0xFFFFFF);
-    }
+    // //make predator black
+    // colors[i] = new THREE.Color(0x000000);
 
-    //make predator black
-    colors[i] = new THREE.Color(0x000000);
+    // //temp 
+    // var geometry = new THREE.Geometry();
+    // geometry.colors = colors
 
-    //temp 
-    var geometry = new THREE.Geometry();
-    geometry.colors = colors
+    // var sprite = new THREE.TextureLoader().load("data/point3.png");
+    // //all the points have the samem material 
+    // var material = new THREE.PointsMaterial({vertexColors: THREE.VertexColors ,size: 2, map: sprite,alphaTest: 0.5, transparent: true});
 
-    var sprite = new THREE.TextureLoader().load("data/point3.png");
-    //all the points have the samem material 
-    var material = new THREE.PointsMaterial({vertexColors: THREE.VertexColors ,size: 2, map: sprite,alphaTest: 0.5, transparent: true});
     var boids = [];
 
     AFRAME.registerComponent('boid', {
-    schema  :{
+    schema  : {
         position: {
           type: 'vec3', 
           default: {x: 0, y: 0 , z: -200}
         }
       }, 
 
-        init: function(){
+      init: function(){
           var pos = this.data.position; 
           this.maxspeed = 1.35;  
           this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
-          geometry.vertices.push(this.loc); //collect the vertices inside geometry 
+          // geometry.vertices.push(this.loc); //collect the vertices inside geometry 
           this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
             random(-this.maxspeed,this.maxspeed));
           this.acc = new THREE.Vector3(0,0,0);
@@ -60,6 +64,12 @@
           this.neighbor = 50;  
           this.maxforce = 0.070;
           this.seekforce = 0.035;
+
+          //have each boid be a point light 
+          this.light = new THREE.PointLight(color, intensity, distance, decay);
+          this.light.add(new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({color: color})));
+          this.el.setObject3D('mesh', this.light);
+          console.log(this.light.position);
       }, 
 
       alignment: function(){
@@ -182,27 +192,27 @@
       avoidwalls: function(){
           this.wallVector.set(minSize , this.loc.y, this.loc.z);
           this.wallVector = this.avoid( this.wallVector );
-          this.wallVector.multiplyScalar(4);
+          this.wallVector.multiplyScalar(5);
           this.acc.add(this.wallVector);
 
           this.wallVector.set(maxSize , this.loc.y, this.loc.z);
           this.wallVector = this.avoid( this.wallVector );
-          this.wallVector.multiplyScalar(4);
+          this.wallVector.multiplyScalar(5);
           this.acc.add(this.wallVector);
 
           this.wallVector.set(this.loc.x , minSize, this.loc.z);
           this.wallVector = this.avoid( this.wallVector );
-          this.wallVector.multiplyScalar(4);
+          this.wallVector.multiplyScalar(5);
           this.acc.add(this.wallVector);
 
           this.wallVector.set(this.loc.x , maxSize, this.loc.z);
           this.wallVector = this.avoid( this.wallVector );
-          this.wallVector.multiplyScalar(4);
+          this.wallVector.multiplyScalar(5);
           this.acc.add(this.wallVector);
 
           this.wallVector.set(this.loc.x , this.loc.y , minSize);
           this.wallVector = this.avoid( this.wallVector );
-          this.wallVector.multiplyScalar(4);
+          this.wallVector.multiplyScalar(5);
           this.acc.add(this.wallVector);
 
           this.wallVector.set(this.loc.x , this.loc.y , maxSize);
@@ -218,22 +228,24 @@
           this.vel.divideScalar( len / this.maxspeed);  
         }
         this.loc.add(this.vel);
+        this.light.position.set(this.loc.x, this.loc.y, this.loc.z);
+        console.log(this.light.position);
         this.acc.set(0,0,0);
       },
 
-      flock: function(camera, predator){
+      flock: function(camera){
         this.seek(camera);
-        this.repulsePredator(predator);
+        //this.repulsePredator(predator);
         this.alignment();
         this.cohesion();
         this.separation();
         this.repulse(this.center);
       },
 
-      run: function(target, avoid){
+      run: function(target){
         this.avoidwalls();
         if(Math.random() > 0.60){
-          this.flock(target, avoid);
+          this.flock(target);
         }
         this.move();
       }
@@ -252,27 +264,28 @@
                   boids.push(newb);
         }
 
-        this.predator = document.createElement("a-entity"); 
-        this.predator.setAttribute("predator");
-        this.predator.setAttribute("class", "predator");
-        this.el.sceneEl.appendChild(this.predator);
+        // this.predator = document.createElement("a-entity"); 
+        // this.predator.setAttribute("predator");
+        // this.predator.setAttribute("class", "predator");
+        // this.el.sceneEl.appendChild(this.predator);
 
-        var birds = new THREE.Points(geometry, material);
-        this.el.setObject3D('particle', birds);
+        //var birds = new THREE.Points(geometry, material);
+        //this.el.setObject3D('particle', birds);
+
       }, 
 
       tick: function(){
-          geometry.verticesNeedUpdate = true;
+          //geometry.verticesNeedUpdate = true;
           var cam = document.querySelector("#main-cam").components.camera.camera; 
           var direction = cam.getWorldDirection();
           direction.multiplyScalar(350);
 
-          var p = this.predator.components.predator;
-          p.run();
+          // var p = this.predator.components.predator;
+          // p.run();
 
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
-              b.run(direction, p.loc);
+              b.run(direction);
           }
       }
 
@@ -292,7 +305,7 @@
           var pos = this.data.position; 
           this.maxspeed = 2;  
           this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
-          geometry.vertices.push(this.loc); //collect the vertices inside geometry 
+          //geometry.vertices.push(this.loc); //collect the vertices inside geometry 
           this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
             random(-this.maxspeed,this.maxspeed));
           this.acc = new THREE.Vector3(0,0,0);
