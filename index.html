@@ -4,16 +4,51 @@
     <script> 
     //birding code from http://threejs.org/examples/canvas_geometry_birds.html
     //and Daniel Shiffman Nature of Code
-    //remove points geometry and add in point lights 
-    var intensity = 10;
-    var distance = 1000;
-    var decay = 2.0;
+
+    var intensity = 8;
+    var distance = 700;
+    var decay = 0.25; //.25
+
     var maxSize = 600;
     var minSize = -600;
-    var colors = []; 
-    var numBoids = 30; 
-    var sphere = new THREE.SphereGeometry(0.50, 16, 8);
-    var color = 0x0040ff; 
+    var numBoids = 15; 
+    var count = 0; 
+
+    var extrudeSettings = { amount: 1, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
+    var s = 0.035; 
+
+    var points = [];
+    var leftToppts = [new THREE.Vector2 (-100 , 75) , new THREE.Vector2 (-120 , 0), new THREE.Vector2 (0, 0)];
+    points.push(leftToppts);
+    var leftBotpots = [new THREE.Vector2 (-120 , -30), new THREE.Vector2 (-90 , -110), new THREE.Vector2 (0, 0)];
+    points.push(leftBotpots);
+    var shapes = [];
+    for(var i = 0; i < points.length; i++){
+      var wing = new THREE.Shape();
+      wing.moveTo( 0, 0 );
+      wing.splineThru(points[i]);
+      shapes.push(wing);
+    }
+    var geometryLeft = new THREE.ExtrudeGeometry(shapes, extrudeSettings );
+    var points = [];
+    
+    var rightToppots = [new THREE.Vector2 (100 , 75), new THREE.Vector2 (120 , 0), new THREE.Vector2 (0, 0)];
+    points.push(rightToppots);
+    var rightBotpts = [new THREE.Vector2 (120 , -30), new THREE.Vector2 (90 , -110), new THREE.Vector2 (0, 0)];
+    points.push(rightBotpts);
+
+    var shapes2 = [];
+    for(var i = 0; i < points.length; i++){
+        var wing = new THREE.Shape();
+        wing.moveTo( 0, 0 );
+        wing.splineThru(points[i]);
+        shapes2.push(wing);
+    }
+
+    colors = [0xf23b71];
+    var geometryRight = new THREE.ExtrudeGeometry(shapes2, extrudeSettings );
+    var sphere = new THREE.SphereGeometry(0.5,16,8);
+    var basicMesh = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
 
     function random(min, max){
       return Math.random() * (max - min) + min;
@@ -23,21 +58,9 @@
       return Math.sqrt((x1 - x2) * (x1 - x2) + (y1-y2) * (y1-y2));
     }
 
-   
-    // for(var i = 0; i < numBoids; i++){
-    //   colors[i] = new THREE.Color(0xFFFFFF);
-    // }
-
-    // //make predator black
-    // colors[i] = new THREE.Color(0x000000);
-
-    // //temp 
-    // var geometry = new THREE.Geometry();
-    // geometry.colors = colors
-
-    // var sprite = new THREE.TextureLoader().load("data/point3.png");
-    // //all the points have the samem material 
-    // var material = new THREE.PointsMaterial({vertexColors: THREE.VertexColors ,size: 2, map: sprite,alphaTest: 0.5, transparent: true});
+    function map_range(value, low1, high1, low2, high2) {
+      return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+    }
 
     var boids = [];
 
@@ -51,9 +74,8 @@
 
       init: function(){
           var pos = this.data.position; 
-          this.maxspeed = 1.35;  
+          this.maxspeed = 1;  
           this.loc = new THREE.Vector3(pos.x, pos.y, pos.z); 
-          // geometry.vertices.push(this.loc); //collect the vertices inside geometry 
           this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
             random(-this.maxspeed,this.maxspeed));
           this.acc = new THREE.Vector3(0,0,0);
@@ -62,14 +84,37 @@
           this.center = new THREE.Vector3(0,0,0);
           this.wallVector = new THREE.Vector3(0,0,0);
           this.neighbor = 50;  
-          this.maxforce = 0.070;
-          this.seekforce = 0.035;
+          this.maxforce = 0.060;
+          this.seekforce = 0.020;
 
-          //have each boid be a point light 
-          this.light = new THREE.PointLight(color, intensity, distance, decay);
-          this.light.add(new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({color: color})));
+          this.light = new THREE.PointLight(0xFFFFFF, intensity, distance, decay);
+          this.mesh = new THREE.Mesh(sphere, basicMesh);
+
+          //butterfly 
+          this.group = new THREE.Group();
+
+          var c = Math.floor(Math.random() * colors.length);
+          var wingMesh  = new THREE.MeshBasicMaterial( { color: colors[c]} );
+          this.leftWing = new THREE.Mesh(geometryLeft, wingMesh);
+          this.leftWing.scale.set(s,s,s);
+          this.group.add(this.leftWing);
+
+          this.rightWing = new THREE.Mesh(geometryRight, wingMesh);
+          this.rightWing.scale.set(s,s,s);
+          this.group.add(this.rightWing);
+
+          this.light.add(this.mesh);
           this.el.setObject3D('mesh', this.light);
-          console.log(this.light.position);
+          this.el.setObject3D('butterfly', this.group);
+
+          //base rotation
+          this.group.rotation.x = Math.PI / 2;  
+          this.zBaseRotation = -Math.PI / 2;
+          
+          this.rightWing.rotation.y = 0.20;
+          this.leftWing.rotation.y = -0.20;
+
+          this.phase = Math.floor( Math.random() * 62.83 );
       }, 
 
       alignment: function(){
@@ -228,24 +273,35 @@
           this.vel.divideScalar( len / this.maxspeed);  
         }
         this.loc.add(this.vel);
+        var cX = map_range(this.loc.x, minSize, maxSize, 0 , 1);
+        var cY = map_range(this.loc.y, minSize, maxSize, 0 , 1);
+        var cZ = map_range(this.loc.z, minSize, maxSize, 0 , 1);
         this.light.position.set(this.loc.x, this.loc.y, this.loc.z);
-        console.log(this.light.position);
+        this.light.color.setRGB(cX, cY, cZ);
+        this.group.position.copy(this.light.position);
+
+        this.group.rotation.z = Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation / 2; 
+        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
+        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
+        this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 5) + 0.08 )) %  62.83 ;
+        this.rightWing.rotation.y = Math.sin( this.phase );
+        this.leftWing.rotation.y = -Math.sin( this.phase );
         this.acc.set(0,0,0);
       },
 
-      flock: function(camera){
+      flock: function(camera, predator){
         this.seek(camera);
-        //this.repulsePredator(predator);
+       // this.repulsePredator(predator);
         this.alignment();
         this.cohesion();
         this.separation();
         this.repulse(this.center);
       },
 
-      run: function(target){
+      run: function(target, predator){
         this.avoidwalls();
         if(Math.random() > 0.60){
-          this.flock(target);
+          this.flock(target, predator);
         }
         this.move();
       }
@@ -264,28 +320,24 @@
                   boids.push(newb);
         }
 
-        // this.predator = document.createElement("a-entity"); 
-        // this.predator.setAttribute("predator");
-        // this.predator.setAttribute("class", "predator");
-        // this.el.sceneEl.appendChild(this.predator);
-
-        //var birds = new THREE.Points(geometry, material);
-        //this.el.setObject3D('particle', birds);
-
+        this.predator = document.createElement("a-entity"); 
+        this.predator.setAttribute("predator");
+        this.predator.setAttribute("class", "predator");
+        this.el.sceneEl.appendChild(this.predator);
       }, 
 
       tick: function(){
           //geometry.verticesNeedUpdate = true;
           var cam = document.querySelector("#main-cam").components.camera.camera; 
           var direction = cam.getWorldDirection();
-          direction.multiplyScalar(350);
+          direction.multiplyScalar(500);
 
-          // var p = this.predator.components.predator;
-          // p.run();
+          var p = this.predator.components.predator;
+          p.run();
 
           for(var i = 0; i < this.numBoids; i++){
               var b = boids[i].components.boid;
-              b.run(direction);
+              b.run(direction, p.loc);
           }
       }
 
@@ -309,8 +361,12 @@
           this.vel = new THREE.Vector3(random(-this.maxspeed,this.maxspeed) , random(-this.maxspeed,this.maxspeed) , 
             random(-this.maxspeed,this.maxspeed));
           this.acc = new THREE.Vector3(0,0,0);
-          this.neighbor = 50;  
+          this.neighbor = 100;  
           this.seekforce = 0.1; 
+
+          // this.light = new THREE.PointLight(predatorColor, 10, 800, decay);
+          // this.light.add(new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({color: predatorColor})));
+          // this.el.setObject3D('mesh', this.light);
         }, 
 
         move: function(){
@@ -320,7 +376,8 @@
             this.vel.divideScalar( len / this.maxspeed);  
           }
           this.loc.add(this.vel);
-          this.acc.set(0,0,0);
+          //this.light.position.set(this.loc.x, this.loc.y, this.loc.z);
+          this.acc.set(0,0,0); 
         },
 
         run: function(){
@@ -363,6 +420,7 @@
             }); 
         }
     }); 
+
     </script> 
     <a-scene id="scene">
       <a-sky color="#000000"> </a-sky>
