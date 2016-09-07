@@ -11,7 +11,7 @@
 
     var maxSize = 600;
     var minSize = -600;
-    var numBoids = 15; 
+    var numBoids = 12; 
     var count = 0; 
 
     var extrudeSettings = { amount: 1, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
@@ -83,7 +83,7 @@
           this.coh = new THREE.Vector3(0,0,0);
           this.center = new THREE.Vector3(0,0,0);
           this.wallVector = new THREE.Vector3(0,0,0);
-          this.neighbor = 50;  
+          this.neighbor = 35;  
           this.maxforce = 0.060;
           this.seekforce = 0.020;
 
@@ -280,7 +280,7 @@
         this.light.color.setRGB(cX, cY, cZ);
         this.group.position.copy(this.light.position);
 
-        this.group.rotation.z = Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation / 2; 
+        this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 10; 
         this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
         this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
         this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 5) + 0.08 )) %  62.83 ;
