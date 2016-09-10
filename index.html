@@ -5,7 +5,7 @@
     //birding code from http://threejs.org/examples/canvas_geometry_birds.html
     //and Daniel Shiffman Nature of Code
 
-    var intensity = 8;
+    var intensity = 12;
     var distance = 700;
     var decay = 0.25; //.25
 
@@ -280,10 +280,10 @@
         this.light.color.setRGB(cX, cY, cZ);
         this.group.position.copy(this.light.position);
 
-        this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 10; 
+        this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 12; 
         this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
         this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
-        this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 5) + 0.08 )) %  62.83 ;
+        this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 8) + 0.08 )) %  50 ;
         this.rightWing.rotation.y = Math.sin( this.phase );
         this.leftWing.rotation.y = -Math.sin( this.phase );
         this.acc.set(0,0,0);
