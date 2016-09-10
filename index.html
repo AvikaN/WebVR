@@ -281,8 +281,8 @@
         this.group.position.copy(this.light.position);
 
         this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 12; 
-        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
-        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
+        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 4;
+        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 4;
         this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 8) + 0.08 )) %  50 ;
         this.rightWing.rotation.y = Math.sin( this.phase );
         this.leftWing.rotation.y = -Math.sin( this.phase );
