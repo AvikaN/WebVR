@@ -280,10 +280,10 @@
         this.light.color.setRGB(cX, cY, cZ);
         this.group.position.copy(this.light.position);
 
-        this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 8; 
-        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 1.5;
-        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 1.5;
-        this.phase = ( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 8) + 0.08 )) %  100;
+        this.group.rotation.z = (Math.atan2( -this.vel.z, this.vel.x ) + this.zBaseRotation) / 5; 
+        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 2;
+        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 2;
+        this.phase = (( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 5) + 0.08 )) %  100) ;
         this.rightWing.rotation.y = Math.sin( this.phase );
         this.leftWing.rotation.y = -Math.sin( this.phase );
         this.acc.set(0,0,0);
