@@ -15,7 +15,7 @@
     var count = 0; 
 
     var extrudeSettings = { amount: 1, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
-    var s = 0.035; 
+    var s = 0.025; 
 
     var points = [];
     var leftToppts = [new THREE.Vector2 (-100 , 75) , new THREE.Vector2 (-120 , 0), new THREE.Vector2 (0, 0)];
@@ -281,9 +281,9 @@
         this.group.position.copy(this.light.position);
 
         this.group.rotation.z = ((Math.atan2( -this.vel.z, this.vel.x )) + this.zBaseRotation); 
-        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 1.5;
-        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length()) / 1.5;
-        this.phase = (( this.phase + ( Math.max( 0, this.leftWing.rotation.x / 10) + 0.08 )) %  200) ;
+        this.rightWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
+        this.leftWing.rotation.x = -Math.asin( this.vel.y / this.vel.length());
+        this.phase = (( this.phase + ( Math.max( 0, this.group.rotation.z / 5) + 0.05)) %  100) ;
         this.rightWing.rotation.y = Math.sin( this.phase );
         this.leftWing.rotation.y = -Math.sin( this.phase );
         this.acc.set(0,0,0);
